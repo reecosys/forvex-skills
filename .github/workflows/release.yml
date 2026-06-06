@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make scripts executable
+        run: chmod +x package.sh scripts/build-manifest.sh
+
+      - name: Package every skill
+        run: ./package.sh
+
+      - name: Build manifest.json
+        run: ./scripts/build-manifest.sh "${GITHUB_REF_NAME}"
+
+      - name: List build artifacts
+        run: ls -la build/
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "forVEX Skills ${GITHUB_REF_NAME}" \
+            --notes "Automated release. See manifest.json for the full skill list." \
+            build/*.skill build/manifest.json
