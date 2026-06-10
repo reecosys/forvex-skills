@@ -152,7 +152,9 @@ Do not auto-prompt to save after every analysis. Save only when the user explici
 
 If they say yes (or paraphrase such as "save it" / "log this"):
 
-**Before calling `forvex_save_deal`, build a `session_summary` digest from this conversation.** The Operate memo already renders engine numbers (verdict, strategy matrix, ARV, offer, rehab, REbuild total, property facts). The summary captures **what the numbers cannot**: why assumptions were agreed, what the seller said, financing rationale, offer negotiation bands, explicit decisions, tradeoffs, and open items.
+**REQUIRED: every save MUST include a `context.session_summary` JSON object.** This is the primary context payload — without it the Operate memo's Session card cannot render and the save is considered degraded. Build the digest from this conversation *before* you call `forvex_save_deal`. The Operate memo already renders engine numbers (verdict, strategy matrix, ARV, offer, rehab, REbuild total, property facts). The summary captures **what the numbers cannot**: why assumptions were agreed, what the seller said, financing rationale, offer negotiation bands, explicit decisions, tradeoffs, and open items.
+
+A free-text `notes` paragraph is NOT a substitute for `session_summary`. Notes is a legacy supplementary field; the memo does not parse it for the Session card. If you find yourself reaching for `notes` to capture conversation context, stop and put that content into the `session_summary` shape instead.
 
 Rules:
 
@@ -188,22 +190,24 @@ Pass it as the `session_summary` key under `context`:
 
 Omit sections by setting the string to `null` or the array to `[]`. Use plain-text bullet strings; do not wrap them in objects.
 
-1. Call `forvex_save_deal` with:
+1. **Pre-flight self-check.** Before issuing the tool call, confirm your `context` argument contains `session_summary` as a JSON object with at minimum a non-empty `headline` string. If it does not, stop — build the digest and add it. A save without `context.session_summary` is a failed save even if the tool returns `saved: true`; the memo will fall back to thin legacy adapter output and you'll have to resave.
+
+2. Call `forvex_save_deal` with:
    - `property_id` (from step 1) — never re-resolve from the address here
    - `analysis` — the **full** `forvex_underwrite` result payload (not a trimmed matrix summary). Include `calc_version`, `arv`, `offer`, `rehab`, `best_strategy`, `verdict`, `deal_score`, `risk_score`, `confidence`, `strategies` / `all_strategies` with per-strategy economics (`roi`, `holding_months`, `predicted_sale`, fee lines), `posture`, `lender_ltv_cap`, `cash_overlay`
-   - `context` — `session_summary` (above) plus any of `seller_motivation`, `lead_source`, `lead_type`, `notes`, `appointment_date` known from conversation, appointment-prep handoff, or `readvise_property` / prior `analysis.context`
+   - `context` — REQUIRED: `session_summary` object as defined above. May also include supplementary keys when known from conversation, appointment-prep handoff, `readvise_property`, or prior `analysis.context`: `seller_motivation`, `lead_source`, `lead_type`, `appointment_date`. **Do NOT use `notes` as a substitute for `session_summary` — put narrative content inside the session_summary structure.**
    - `source: "forvex-underwriting"`
    - `status: "LEAD"` only on the very first save for a property (omit on re-analyses; `forvex_save_deal` never changes status on existing deals)
    - `idempotency_key` — a fresh UUID (so accidental retries are safe)
-2. **Verify by re-read.** Immediately call `forvex_get_deal(deal_id)` and diff `analysis_summary` against what you sent. Only confirm "saved" once `arv`, `offer`, `rehab`, and `deal_score` round-trip exactly. If anything is off, surface the diff to the user instead of claiming success.
-3. **Offer price follow-up.** If `analysis_summary.offer` is null or `0` after verify, ask in one line:
+3. **Verify by re-read.** Immediately call `forvex_get_deal(deal_id)` and diff `analysis_summary` against what you sent. Only confirm "saved" once `arv`, `offer`, `rehab`, and `deal_score` round-trip exactly. If anything is off, surface the diff to the user instead of claiming success.
+4. **Offer price follow-up.** If `analysis_summary.offer` is null or `0` after verify, ask in one line:
 
    > *"No offer price was saved. Is $[MAO or pre-offer adjusted] your target offer, or should we leave it blank until after the appointment?"*
 
    - If they give a number → re-run `forvex_underwrite` with that `purchase_price`, then `forvex_save_deal` again (new `idempotency_key`).
    - If they want it blank → confirm Operate will show offer as unset until they update it post-meeting.
-4. If `forvex_save_deal` returns `deduped: true`, tell the user the analysis was already on file.
-5. **If `forvex_save_deal` is unavailable** (MCP cycling, tool dropped out of scope, network error): show the user a compact markdown rendering of the `session_summary` so they have the digest, but **retain the exact JSON payload (analysis + context) in this thread**. When tools return — even later in the same conversation — retry with the *same* payload and a *fresh* `idempotency_key`. Do not rebuild the summary from scratch; the conversation may have moved on and a re-derived digest would lose detail.
+5. If `forvex_save_deal` returns `deduped: true`, tell the user the analysis was already on file.
+6. **If `forvex_save_deal` is unavailable** (MCP cycling, tool dropped out of scope, network error): show the user a compact markdown rendering of the `session_summary` so they have the digest, but **retain the exact JSON payload (analysis + context) in this thread**. When tools return — even later in the same conversation — retry with the *same* payload and a *fresh* `idempotency_key`. Do not rebuild the summary from scratch; the conversation may have moved on and a re-derived digest would lose detail.
 
 Never call `forvex_save_deal` on the skill's own initiative. The franchisee must explicitly ask.
 
