@@ -203,6 +203,7 @@ Omit sections by setting the string to `null` or the array to `[]`. Use plain-te
    - If they give a number → re-run `forvex_underwrite` with that `purchase_price`, then `forvex_save_deal` again (new `idempotency_key`).
    - If they want it blank → confirm Operate will show offer as unset until they update it post-meeting.
 4. If `forvex_save_deal` returns `deduped: true`, tell the user the analysis was already on file.
+5. **If `forvex_save_deal` is unavailable** (MCP cycling, tool dropped out of scope, network error): show the user a compact markdown rendering of the `session_summary` so they have the digest, but **retain the exact JSON payload (analysis + context) in this thread**. When tools return — even later in the same conversation — retry with the *same* payload and a *fresh* `idempotency_key`. Do not rebuild the summary from scratch; the conversation may have moved on and a re-derived digest would lose detail.
 
 Never call `forvex_save_deal` on the skill's own initiative. The franchisee must explicitly ask.
 
