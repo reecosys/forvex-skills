@@ -41,7 +41,7 @@ When MCP is connected, before gathering inputs you must resolve whether the fran
 
    > *"There's an existing deal on this property from {updated_at_relative} (current status: {status}). Pick up where I left off, or re-run fresh?"*
 
-3. If they say **pick up**, call `forvex_get_deal_history(deal_id)` once for context and `forvex_get_deal(deal_id)` for the previous analysis. Anchor the new analysis on the previous numbers and call out diffs in the one-pager.
+3. If they say **pick up**, call `forvex_get_deal_history(deal_id)` once for context and `forvex_get_deal(deal_id)` for the previous analysis. Anchor the new analysis on the previous numbers and call out diffs in the one-pager. Also load `readvise_property` CRM fields (motivation, lead_source, lead_type) and `analysis.context` — use these to pre-fill seller context; do not re-ask for fields already on file.
 4. If they say **re-run fresh**, proceed normally. A later `forvex_save_deal` will append a new analysis snapshot rather than overwrite history — `status` is never changed by `forvex_save_deal`.
 5. If `forvex_list_deals` returns multiple active deals, surface the addresses and ask which one they mean. Do not silently pick one.
 
@@ -152,10 +152,46 @@ Do not auto-prompt to save after every analysis. Save only when the user explici
 
 If they say yes (or paraphrase such as "save it" / "log this"):
 
+**Before calling `forvex_save_deal`, build a `session_summary` digest from this conversation.** The Operate memo already renders engine numbers (verdict, strategy matrix, ARV, offer, rehab, REbuild total, property facts). The summary captures **what the numbers cannot**: why assumptions were agreed, what the seller said, financing rationale, offer negotiation bands, explicit decisions, tradeoffs, and open items.
+
+Rules:
+
+- **Do NOT include:** verdict / scores / strategy comparison tables; raw ARV / offer / rehab / profit / ROI / hold (unless negotiation *context* requires it, e.g. *"agreed $287.5K midpoint despite realtor $308K"*); Realie property specs unless condition nuance drove a decision; full REbuild line items; generic buy-box or engine boilerplate.
+- **DO include (only if actually discussed in this thread):** seller context (motivation, timeline, stated floor/ceiling, realtor position); market judgment (how working ARV was chosen, comp disagreements, hold assumptions as agreed); financing rationale (why this posture, constraints); strategy discussion (exits considered/rejected and why); offer ladder (walk-in, target band, walkaway, submitted, walk rule — only user-stated numbers); decisions actually made this session; nuance (risks, inspect-before-buy items, relationship dynamics); open questions (max 3); next steps (max 4, OFFER stage and earlier only).
+- **Single-shot analyses** with no real discussion → keep it minimal: headline + 1–2 decisions, omit empty sections.
+- **Headline** leads with what was decided, not engine verdict alone. One sentence a franchisee could paste into Slack.
+
+Pass it as the `session_summary` key under `context`:
+
+```json
+"context": {
+  "session_summary": {
+    "version": 1,
+    "headline": "<one sentence — decision + key tension>",
+    "seller": "<2–4 sentences or null>",
+    "market": "<1–3 sentences on ARV/market agreement or null>",
+    "financing": "<1–2 sentences on why this posture or null>",
+    "strategies_discussed": "<exits considered/rejected and why — not a profit table, or null>",
+    "rehab_notes": "<scope judgment only, e.g. 'check water heater date' or null>",
+    "offer_ladder": {
+      "walk_in": null, "target_low": null, "target_high": null,
+      "walkaway": null, "submitted": null,
+      "walk_rule": "<plain language, e.g. 'If counter above $195K, walk — margin below floor'>"
+    },
+    "decisions": ["<max 5 bullets — explicit session decisions>"],
+    "nuance": ["<max 4 bullets — non-obvious risk or context>"],
+    "open_questions": ["<max 3 bullets — unresolved at save time>"],
+    "next_steps": ["<max 4 bullets — operational follow-ups, omit on INVENTORY+>"]
+  }
+}
+```
+
+Omit sections by setting the string to `null` or the array to `[]`. Use plain-text bullet strings; do not wrap them in objects.
+
 1. Call `forvex_save_deal` with:
    - `property_id` (from step 1) — never re-resolve from the address here
-   - `analysis` — the full `forvex_underwrite` result payload (or local fallback payload), including `calc_version`, `arv`, `offer`, `rehab`, `best_strategy`, `verdict`, `deal_score`, `risk_score`, `confidence`, `all_strategies`, `posture`, `lender_ltv_cap`, `cash_overlay`
-   - `context` — `seller_motivation`, `lead_source`, `notes`, `appointment_date` if they were in the conversation
+   - `analysis` — the **full** `forvex_underwrite` result payload (not a trimmed matrix summary). Include `calc_version`, `arv`, `offer`, `rehab`, `best_strategy`, `verdict`, `deal_score`, `risk_score`, `confidence`, `strategies` / `all_strategies` with per-strategy economics (`roi`, `holding_months`, `predicted_sale`, fee lines), `posture`, `lender_ltv_cap`, `cash_overlay`
+   - `context` — `session_summary` (above) plus any of `seller_motivation`, `lead_source`, `lead_type`, `notes`, `appointment_date` known from conversation, appointment-prep handoff, or `readvise_property` / prior `analysis.context`
    - `source: "forvex-underwriting"`
    - `status: "LEAD"` only on the very first save for a property (omit on re-analyses; `forvex_save_deal` never changes status on existing deals)
    - `idempotency_key` — a fresh UUID (so accidental retries are safe)
