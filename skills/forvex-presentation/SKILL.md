@@ -72,6 +72,16 @@ The skill always produces a **single self-contained HTML artifact** (no external
 
 For mobile (iPhone Claude), warn the user that the artifact may have reduced interactivity but should still be viewable.
 
+## Buyer-facing? Use forvex-wholesale-sheet instead
+
+This skill renders the **operator's** view — verdict, deal score, buy-box fit,
+MAO, cost basis, assignment spread. Never hand that to a buyer. When the user
+wants something to send a **cash buyer, a wholesale desk, or a buyers list**
+("make a wholesale sheet / buyer flyer", "package this for a desk", "something I
+can send buyers"), route to **`forvex-wholesale-sheet`** — it renders an
+audience-inverted sheet that structurally suppresses every operator-internal
+number. Do not build a "buyer mode" of this skill.
+
 ## What this skill does NOT do
 
 - Does not re-run the math
