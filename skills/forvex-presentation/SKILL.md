@@ -7,7 +7,10 @@ description: Render an already-analyzed HV deal into a richer artifact format �
 
 You take an already-completed deal analysis (from `forvex-underwriting` earlier in the conversation or from a saved MCP deal analysis) and render it as a richer artifact. You do not re-run the math. You do not change any numbers. You re-format what's already there into a more visual deliverable.
 
-> **Status:** Phase 6 — sketch only. The render targets, chart libraries, and CSS/HTML scaffolding need to be built out before this skill is production-ready. The intent and structure are documented here so it slots cleanly into the architecture when its turn comes.
+> **Status:** Phase 6 — **Mode 3 (Printable PDF) is built** and production-ready
+> (see `references/pdf-template.html` + `references/style-guide.md`). Mode 1
+> (Dashboard) and Mode 2 (Slide deck) are still sketches — build them against the
+> same style guide before relying on them.
 
 ## When to invoke
 
@@ -56,15 +59,34 @@ Optional: a sliders panel that lets the user (in browser) tweak rent or ARV and 
 
 Designed for screen-share or PDF export. Keep typography big (audience reads from a distance).
 
-### Mode 3 — Printable PDF
+### Mode 3 — Printable PDF  *(built)*
 
-Print-CSS HTML that renders cleanly as a single page (or two pages max):
+A print-CSS HTML one-pager: header bar (address, verdict, deal score, best
+strategy), KPI strip (ARV · target offer · rehab · entry % · net profit),
+two-column body (property facts + recommended cost basis left; strategy
+comparison + risk + MAO/action right), footer (confidence, defaults flagged,
+date, brand). User saves the artifact and prints to PDF via browser.
 
-- Header bar: address, verdict, score
-- Two-column body: property block + recommended strategy on left, comparison table + risk + MAO on right
-- Footer: confidence label, defaults flagged, generation date
+**Workflow:**
 
-User saves the artifact, then prints to PDF via browser.
+1. Read `references/style-guide.md` (palette, fonts, verdict color mapping, layout
+   rules) and `references/pdf-template.html` (the scaffold).
+2. Map the saved analysis onto the template's `{{TOKENS}}` — the full token list
+   and the analysis field each comes from is documented in the comment block at
+   the top of `pdf-template.html`. Key mappings:
+   - `{{VERDICT}}`/`{{VERDICT_CLASS}}` from `verdict` (class = `buy`/`negotiate`/`pass`).
+   - `{{DEAL_SCORE}}`, `{{RISK_SCORE}}` from `deal_score` / `risk_score`.
+   - KPI strip + cost basis from the recommended strategy's economics.
+   - Strategy comparison: **repeat the `<tr>`** (see the `STRATEGY_ROWS` marker)
+     once per strategy, `class="best"` on the recommended one.
+   - Risk component bar widths are CSS percentages (e.g. `width:22%`).
+3. **Omit a section** (drop the block) when the analysis lacks the data rather than
+   printing `{{TOKENS}}` or inventing numbers.
+4. Output the filled HTML as a single self-contained artifact. Default brand is
+   forVEX Edge; override `--accent` / `{{BRAND}}` only if the workspace specifies.
+
+Operator artifact — it shows verdict, score, MAO, cost basis. Never strip the
+confidence/defaults footer.
 
 ## Output
 
@@ -96,10 +118,10 @@ number. Do not build a "buyer mode" of this skill.
 - `forvex://property/{property_id}` can supply the property snapshot that travels with the presentation.
 - `forvex://workspace/{workspace_id}/buy-box` is framing context only. It should never change the saved underwriting numbers you render.
 
-## Reference files (to be built in Phase 6)
+## Reference files
 
-- `references/dashboard-template.html` — base HTML/CSS/JS for dashboard mode
-- `references/deck-template.html` — base HTML for slide deck
-- `references/pdf-template.html` — print-CSS one-pager
-- `references/style-guide.md` — colors, typography, layout rules (matches HV brand)
-- `references/chart-recipes.md` — which Chart.js config to use for which chart type
+- `references/pdf-template.html` — print-CSS one-pager ✅ **built**
+- `references/style-guide.md` — palette, typography, layout, verdict colors ✅ **built**
+- `references/dashboard-template.html` — base HTML/CSS/JS for dashboard mode *(pending)*
+- `references/deck-template.html` — base HTML for slide deck *(pending)*
+- `references/chart-recipes.md` — which Chart.js config for which chart type *(pending — dashboard)*
