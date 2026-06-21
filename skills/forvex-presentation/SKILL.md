@@ -36,8 +36,8 @@ If there isn't an existing analysis to read:
 
 An interactive HTML artifact (Chart.js from CDN) with: KPI tile row (Verdict,
 Deal Score, Best Strategy, Risk), badge row, and four charts — net profit by
-strategy (bar), recommended cost basis (doughnut), profit sensitivity to ARV
-(line), risk components (horizontal bar) — plus an action strip (MAO, suggested
+strategy (bar), recommended cost basis (doughnut), profit drivers (tornado),
+risk components (horizontal bar) — plus an action strip (MAO, suggested
 offer, financing) and the confidence/defaults footer.
 
 **Workflow:**
@@ -51,8 +51,9 @@ offer, financing) and the confidence/defaults footer.
    - `DATA.strategies` from `all_strategies` (`best:true` on the recommended one).
    - `DATA.costBasis` = the recommended strategy's cost components (same lines as
      the PDF one-pager).
-   - `DATA.sensitivity` from the analysis sensitivity block, or derive per
-     `chart-recipes.md` (mark the card "approx." and flag defaults if derived).
+   - `DATA.drivers` + `DATA.baseProfit`: compute the profit swing for each lever
+     (ARV, rehab, hold, offer) from the recommended strategy economics per
+     `chart-recipes.md`; sort by swing desc and flag any defaulted input.
    - `DATA.risk` = market / deal-math / execution, each 0–100.
    - `DATA.badges` from the analysis global badges.
 3. **Omit a card** if the analysis lacks its data rather than faking a chart.
