@@ -15,7 +15,7 @@ When MCP is connected, use these tools **before** asking the user for data the s
 | 3 | `forvex_resolve_property` | One of: `address`, `property_id`, `core_deal_id` |
 | 4 | `forvex_open_or_create_project` | `core_deal_id` or `core_property_id` + optional sqft/beds/baths |
 | 5 | `forvex_get_missing_inputs` | After you draft `category_conditions` |
-| 6 | `forvex_preview_estimate` | **Read-only** engine run |
+| 6 | `forvex_preview_estimate` | **Read-only** engine run — server resolves strategy preset |
 | 7 | `forvex_save_draft_estimate` | After explicit user confirmation |
 | 8 | `forvex_get_estimate` | Verify save |
 
@@ -38,7 +38,7 @@ Returns workspace rehab taxonomy: profile list, price books, per-category librar
 
 Per-user rehab defaults in `rebuild.builder_preferences`:
 
-- `default_profile_by_deal_type` (rental / flip / wholesale)
+- `default_profile_by_deal_type` (rental / flip / wholesale) — **applied server-side** in preview
 - `default_price_book_id`, `contingency_rate`, `severity_default`
 - `rehab_rates_per_sqft` (light/medium/heavy/gut sanity bands)
 - `finish_defaults`, `risk_posture`, `markets`
@@ -75,14 +75,27 @@ Pure deterministic — no LLM.
 
 ```json
 {
-  "project": { "sqft": 1450, "beds": 3, "baths": 2, "year_built": 1972, "contingency_rate": 0.1 },
+  "mode": "category",
+  "project": { "sqft": 1450, "beds": 3, "baths": 2, "year_built": 1972 },
   "category_conditions": { "Kitchen": "Heavy", "Systems": "Medium", "Exterior": "Light" },
-  "profile_id": "uuid-optional",
-  "price_book_id": "uuid-optional"
+  "core_deal_id": "uuid-when-deal-linked",
+  "deal_type": "flip",
+  "user_overrides": [
+    { "item_id": "uuid", "quantity": 240, "exclude_from_contingency": false }
+  ]
 }
 ```
 
-**Output:** `contract_version`, `engine_output` (summary + lineItems), resolved profile/price book ids.
+**Strategy preset resolution (server-side — do not pick profile UUIDs in the skill):**
+
+1. Explicit `profile_id` when user overrides
+2. `default_profile_by_deal_type[deal_type]` from builder prefs
+3. First configured deal-type default in prefs
+4. Oldest workspace profile (legacy fallback)
+
+`deal_type` is inferred from `core_deal_id` → `core.deals.exit_strategy` when omitted. Pass `deal_type` only when there is no linked deal.
+
+**Output:** `contract_version`, `mode`, `engine_output`, `profile_id`, `profile_name`, `profile_resolution`, `price_book_id`, `price_book_resolution`, `deal_type`, `rehab_summary`, `sqft_band`, `variance`, `totals_match`.
 
 Does **not** write to the database.
 
@@ -96,7 +109,7 @@ Uses AI gateway + `validateSkusAgainstCatalog`. Grounding only — preview still
 
 ### `forvex_save_draft_estimate`
 
-**Input:** `project_id`, `engine_output` (from last preview), optional `profile_id`, `price_book_id`, `idempotency_key`, `source`.
+**Input:** `project_id`, `engine_output` (from last preview), `profile_id` + `price_book_id` **from preview response**, `estimate_mode`, `sqft_band`, `variance`, optional `cross_checks`, `idempotency_key`, `source`.
 
 **Output:** `estimate_id`, `status` (`derived`), `rehab_summary`, `deep_link`, `idempotent_replay`.
 
@@ -112,9 +125,10 @@ Update: requires draft-like status; re-saves line items from new `engine_output`
 
 ## Preferences precedence
 
-1. `forvex_get_builder_prefs` (connected MCP)
-2. Project knowledge markdown (offline fallback only)
-3. Defaults stated in `references/category-severity.md`
+1. Server-resolved strategy preset in `forvex_preview_estimate` (builder prefs + deal context)
+2. `forvex_get_builder_prefs` for contingency / severity / $/sqft bands
+3. Project knowledge markdown (offline fallback only)
+4. Defaults stated in `references/category-severity.md`
 
 ---
 
@@ -123,7 +137,8 @@ Update: requires draft-like status; re-saves line items from new `engine_output`
 | Symptom | Action |
 |---------|--------|
 | Auth error | Re-authorize OAuth connector |
-| No library items / profile rules | User must configure REbuild workspace catalog |
+| No library items | User must configure REbuild workspace catalog |
+| No profile rules (category/raw mode) | Configure strategy preset rules in REbuild, or use `bottom_up` with `user_overrides` |
 | RPC not found | Migrations not applied on Supabase — escalate |
-| Preview total = 0 | Check category severities are not all `None` without rules |
+| Preview total = 0 | Check category severities are not all `None` without overrides |
 | `status_locked` on update | User finalizes in REbuild app |
