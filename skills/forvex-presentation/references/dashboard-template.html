@@ -17,7 +17,8 @@
   DATA (JS object — fill arrays from the analysis):
     strategies: [{name, netProfit, best:true|false}]  (best = recommended)
     costBasis:  [{label, amount}]   recommended strategy's cost components
-    sensitivity:[{label:"-15%", profit}]  profit vs ARV at -15..+15 (see recipes)
+    drivers:    [{name:"ARV ±10%", low, high}]  profit swing per lever; sort by (high-low) desc
+    baseProfit: number  recommended strategy net profit (the tornado's center)
     risk:       {market, dealMath, execution}  each 0-100 (higher = riskier)
     badges:     ["Rehab light", "Strong spread", ...]  global badges from analysis
   Omit a card (drop the block) if the analysis lacks its data.
@@ -68,6 +69,7 @@
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
   .card{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:16px 18px;}
   .card h2{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:12px;}
+  .card h2 .sub{font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
   .chart-box{position:relative;height:210px;}
 
   /* action strip */
@@ -118,7 +120,7 @@
   <div class="grid">
     <div class="card"><h2>Net profit by strategy</h2><div class="chart-box"><canvas id="chartStrategy"></canvas></div></div>
     <div class="card"><h2>Recommended cost basis</h2><div class="chart-box"><canvas id="chartCostBasis"></canvas></div></div>
-    <div class="card"><h2>Profit sensitivity to ARV</h2><div class="chart-box"><canvas id="chartSensitivity"></canvas></div></div>
+    <div class="card"><h2>Profit drivers <span class="sub">vs base {{BASE_PROFIT}}</span></h2><div class="chart-box"><canvas id="chartDrivers"></canvas></div></div>
     <div class="card"><h2>Risk components</h2><div class="chart-box"><canvas id="chartRisk"></canvas></div></div>
 
     <div class="action">
@@ -140,7 +142,8 @@
   const DATA = {
     strategies:  {{STRATEGIES_JSON}},   // [{name:"Retail Flip", netProfit:41543, best:true}, ...]
     costBasis:   {{COSTBASIS_JSON}},    // [{label:"Purchase", amount:163650}, ...]
-    sensitivity: {{SENSITIVITY_JSON}},  // [{label:"-15%", profit:12000}, ... "0%" ... "+15%"]
+    drivers:     {{DRIVERS_JSON}},      // [{name:"ARV ±10%", low:19735, high:63351}] sorted by span desc
+    baseProfit:  {{BASE_PROFIT_NUM}},   // recommended net profit (tornado center)
     risk:        {{RISK_JSON}},         // {market:28, dealMath:14, execution:24}
     badges:      {{BADGES_JSON}}        // ["Rehab light", "Strong spread"]
   };
@@ -182,17 +185,19 @@
         tooltip:{callbacks:{label:c=>c.label+': '+money(c.parsed)}} } }
   });
 
-  // 3) Sensitivity — profit vs ARV delta, markers emphasized
-  new Chart(document.getElementById('chartSensitivity'), {
-    type:'line',
-    data:{ labels:(DATA.sensitivity||[]).map(p=>p.label),
-      datasets:[{ data:(DATA.sensitivity||[]).map(p=>p.profit),
-        borderColor:C.accent, backgroundColor:'rgba(234,88,12,.08)', fill:true,
-        tension:.25, pointRadius:(DATA.sensitivity||[]).map(p=>p.label==='0%'?5:3),
-        pointBackgroundColor:C.accent }] },
-    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false},
-      tooltip:{callbacks:{title:i=>'ARV '+i[0].label, label:c=>money(c.parsed.y)}} },
-      scales:{ y:{ ticks:{callback:v=>'$'+(v/1000)+'k'}, grid:{color:C.line} }, x:{ grid:{display:false} } } }
+  // 3) Profit drivers — tornado (floating horizontal bars, sorted by swing).
+  //    Each bar spans [low, high] profit for a standard move in that lever, so
+  //    the longest bar = the input the deal's profit hinges on most.
+  new Chart(document.getElementById('chartDrivers'), {
+    type:'bar',
+    data:{ labels:(DATA.drivers||[]).map(d=>d.name),
+      datasets:[{ data:(DATA.drivers||[]).map(d=>[d.low, d.high]),
+        backgroundColor:C.accent, borderRadius:3, maxBarThickness:22 }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{
+        label:c=>{const v=c.raw; return money(Math.min(v[0],v[1]))+' – '+money(Math.max(v[0],v[1]));} }} },
+      scales:{ x:{ ticks:{callback:v=>'$'+Math.round(v/1000)+'k'}, grid:{color:C.line} },
+        y:{ grid:{display:false} } } }
   });
 
   // 4) Risk components — horizontal bars (0-100, higher = riskier)
