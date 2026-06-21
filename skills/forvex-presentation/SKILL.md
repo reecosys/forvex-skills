@@ -7,9 +7,8 @@ description: Render an already-analyzed HV deal into a richer artifact format �
 
 You take an already-completed deal analysis (from `forvex-underwriting` earlier in the conversation or from a saved MCP deal analysis) and render it as a richer artifact. You do not re-run the math. You do not change any numbers. You re-format what's already there into a more visual deliverable.
 
-> **Status:** Phase 6 — **Mode 1 (Dashboard) and Mode 3 (Printable PDF) are built**
-> and production-ready (see `references/`). Mode 2 (Slide deck) is still a sketch —
-> build it against the same style guide before relying on it.
+> **Status:** Phase 6 — **complete.** All three modes are built and production-ready:
+> Mode 1 (Dashboard), Mode 2 (Slide deck), Mode 3 (Printable PDF). See `references/`.
 
 ## When to invoke
 
@@ -60,17 +59,28 @@ offer, financing) and the confidence/defaults footer.
 4. Output the filled HTML as one self-contained artifact. On iPhone Claude, warn
    that charts may have reduced interactivity but remain viewable.
 
-### Mode 2 — Slide deck
+### Mode 2 — Slide deck  *(built)*
 
-5 HTML slides (use a minimal slide framework like Reveal.js or a custom CSS deck):
+5 self-contained HTML slides (custom CSS deck — no framework): Cover · Strategy
+comparison · Recommended strategy · Risk + guardrails · Action. Arrow-key/click
+nav with dot indicators; prints to PDF one slide per landscape page. Big type for
+screen-share.
 
-1. **Cover** — property address, verdict, headline number, photo placeholder
-2. **Strategy comparison** — the 4-strategy table, score column highlighted
-3. **Recommended strategy** — cost breakdown + 1-sentence reasoning
-4. **Risk + guardrails** — risk score, flags, MAO at target
-5. **Action** — recommended offer, financing posture, next step
+**Workflow:**
 
-Designed for screen-share or PDF export. Keep typography big (audience reads from a distance).
+1. Read `references/style-guide.md` and `references/deck-template.html` (token list
+   in its top comment).
+2. Fill the `{{TOKENS}}` from the analysis:
+   - Slide 2: **repeat the `<tr>`** (see `STRATEGY_ROWS`) per strategy, `class="best"`
+     on the recommended one.
+   - Slide 3: recommended cost-basis lines + `{{REC_REASONING}}` (one sentence).
+   - Slide 4: `{{RISK_FLAGS}}` is a set of `<li>` items (or a single "None" `<li>`);
+     `{{MAO}}` / `{{WALK_ABOVE}}` from the offer stack.
+   - Slide 5: `{{SUGGESTED_OFFER}}`, `{{FINANCING}}`, `{{NEXT_STEP}}` (the concrete
+     next action).
+3. **Drop a row/line** the analysis lacks rather than inventing it.
+4. Output the filled HTML as one self-contained artifact. On iPhone Claude, note
+   that nav still works by tapping the on-screen Prev/Next.
 
 ### Mode 3 — Printable PDF  *(built)*
 
@@ -137,4 +147,4 @@ number. Do not build a "buyer mode" of this skill.
 - `references/style-guide.md` — palette, typography, layout, verdict colors ✅ **built**
 - `references/dashboard-template.html` — interactive Chart.js dashboard ✅ **built**
 - `references/chart-recipes.md` — which Chart.js config for which chart type ✅ **built**
-- `references/deck-template.html` — base HTML for slide deck *(pending)*
+- `references/deck-template.html` — 5-slide deck (nav + print) ✅ **built**
