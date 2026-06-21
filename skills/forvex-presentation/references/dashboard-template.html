@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<!--
+  forVEX Presentation — Interactive Dashboard (OPERATOR view).
+  Self-contained HTML. Chart.js from CDN is the ONLY external dep besides fonts.
+  Fill the {{TOKENS}} and the DATA object from the saved analysis, then deliver
+  as a single artifact. Operator view — shows verdict, score, MAO, cost basis.
+  For a BUYER deliverable use forvex-wholesale-sheet.
+
+  See references/chart-recipes.md for the Chart.js config rationale and the
+  sensitivity-curve derivation. See references/style-guide.md for palette/fonts.
+
+  TOKENS (static text):
+    {{ADDRESS}} {{LOCATION}} {{VERDICT}} {{VERDICT_CLASS}}(buy|negotiate|pass)
+    {{DEAL_SCORE}} {{BEST_STRATEGY}} {{RISK_LABEL}}(e.g. "Low · 22/100")
+    {{MAO}} {{SUGGESTED_OFFER}} {{FINANCING}}
+    {{CONFIDENCE}} {{DEFAULTS_NOTE}} {{DATE}} {{BRAND}}
+  DATA (JS object — fill arrays from the analysis):
+    strategies: [{name, netProfit, best:true|false}]  (best = recommended)
+    costBasis:  [{label, amount}]   recommended strategy's cost components
+    sensitivity:[{label:"-15%", profit}]  profit vs ARV at -15..+15 (see recipes)
+    risk:       {market, dealMath, execution}  each 0-100 (higher = riskier)
+    badges:     ["Rehab light", "Strong spread", ...]  global badges from analysis
+  Omit a card (drop the block) if the analysis lacks its data.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ADDRESS}} — Deal Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#FFFFFF; --paper-2:#FAFAF9; --ink:#1A1714; --ink-soft:#6B6862;
+    --line:#E7E3DC; --accent:#EA580C; --accent-soft:#FFF1E8;
+    --buy:#15803D; --buy-bg:#E8F3EC; --negotiate:#B45309; --negotiate-bg:#FBF0DD;
+    --pass:#B91C1C; --pass-bg:#FBEAEA;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#EDEAE4;font-family:'Archivo',sans-serif;color:var(--ink);line-height:1.45;padding:24px 16px;}
+  .wrap{width:100%;max-width:960px;margin:0 auto;}
+  .mono{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;}
+
+  .head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:16px;}
+  .eyebrow{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);font-weight:600;}
+  h1{font-size:24px;font-weight:700;letter-spacing:-.01em;line-height:1.1;margin-top:4px;}
+  .loc{font-size:12px;color:var(--ink-soft);margin-top:4px;}
+  .pill{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.04em;padding:5px 13px;border-radius:5px;text-transform:uppercase;}
+  .pill.buy{color:var(--buy);background:var(--buy-bg);}
+  .pill.negotiate{color:var(--negotiate);background:var(--negotiate-bg);}
+  .pill.pass{color:var(--pass);background:var(--pass-bg);}
+
+  /* KPI tiles */
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px;}
+  .tile{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:14px 16px;}
+  .tile .l{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);}
+  .tile .v{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums;}
+  .tile .v.sm{font-size:16px;font-family:'Archivo',sans-serif;font-weight:600;}
+
+  /* badges */
+  .badges{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+  .badge{font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);
+    background:var(--paper);border:1px solid var(--line);border-radius:99px;padding:4px 10px;font-weight:500;}
+
+  /* card grid */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:16px 18px;}
+  .card h2{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:12px;}
+  .chart-box{position:relative;height:210px;}
+
+  /* action strip */
+  .action{grid-column:1 / -1;display:grid;grid-template-columns:repeat(3,1fr);gap:0;
+    background:var(--paper);border:1px solid var(--line);border-radius:8px;overflow:hidden;}
+  .action .cell{padding:14px 18px;border-right:1px solid var(--line);}
+  .action .cell:last-child{border-right:0;}
+  .action .l{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);}
+  .action .v{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;margin-top:4px;font-variant-numeric:tabular-nums;}
+  .action .cell.mao .v{color:var(--accent);}
+
+  .foot{margin-top:18px;border-top:1px solid var(--line);padding-top:11px;
+    display:flex;justify-content:space-between;align-items:flex-end;gap:20px;}
+  .foot .disc{font-size:9px;color:var(--ink-soft);line-height:1.5;max-width:64%;}
+  .foot .brand{text-align:right;font-size:10px;color:var(--ink-soft);}
+  .foot .brand b{font-size:13px;color:var(--ink);display:block;font-weight:700;}
+  .foot .brand b span{color:var(--accent);}
+
+  @media(max-width:680px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .grid{grid-template-columns:1fr;}
+    .action{grid-template-columns:1fr;}
+    .action .cell{border-right:0;border-bottom:1px solid var(--line);}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="head">
+    <div>
+      <div class="eyebrow">forVEX Deal Dashboard</div>
+      <h1>{{ADDRESS}}</h1>
+      <div class="loc">{{LOCATION}}</div>
+    </div>
+    <span class="pill {{VERDICT_CLASS}}">{{VERDICT}}</span>
+  </div>
+
+  <div class="kpis">
+    <div class="tile"><div class="l">Verdict</div><div class="v sm">{{VERDICT}}</div></div>
+    <div class="tile"><div class="l">Deal score</div><div class="v">{{DEAL_SCORE}}<span style="font-size:12px;color:var(--ink-soft)">/10</span></div></div>
+    <div class="tile"><div class="l">Best strategy</div><div class="v sm">{{BEST_STRATEGY}}</div></div>
+    <div class="tile"><div class="l">Risk</div><div class="v sm">{{RISK_LABEL}}</div></div>
+  </div>
+
+  <div class="badges" id="badges"><!-- rendered from DATA.badges --></div>
+
+  <div class="grid">
+    <div class="card"><h2>Net profit by strategy</h2><div class="chart-box"><canvas id="chartStrategy"></canvas></div></div>
+    <div class="card"><h2>Recommended cost basis</h2><div class="chart-box"><canvas id="chartCostBasis"></canvas></div></div>
+    <div class="card"><h2>Profit sensitivity to ARV</h2><div class="chart-box"><canvas id="chartSensitivity"></canvas></div></div>
+    <div class="card"><h2>Risk components</h2><div class="chart-box"><canvas id="chartRisk"></canvas></div></div>
+
+    <div class="action">
+      <div class="cell mao"><div class="l">MAO at target</div><div class="v">{{MAO}}</div></div>
+      <div class="cell"><div class="l">Suggested offer</div><div class="v">{{SUGGESTED_OFFER}}</div></div>
+      <div class="cell"><div class="l">Financing posture</div><div class="v" style="font-size:15px;font-family:'Archivo',sans-serif">{{FINANCING}}</div></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="disc">Internal underwriting dashboard — operator use. Figures from the saved analysis at the date shown; assumptions flagged where defaulted. Confidence: {{CONFIDENCE}}. {{DEFAULTS_NOTE}} Not an appraisal.</div>
+    <div class="brand"><b>for<span>VEX</span> Edge</b>{{BRAND}}<br>Prepared {{DATE}}</div>
+  </div>
+
+</div>
+
+<script>
+  // ── Fill from the saved analysis ──────────────────────────────────────────
+  const DATA = {
+    strategies:  {{STRATEGIES_JSON}},   // [{name:"Retail Flip", netProfit:41543, best:true}, ...]
+    costBasis:   {{COSTBASIS_JSON}},    // [{label:"Purchase", amount:163650}, ...]
+    sensitivity: {{SENSITIVITY_JSON}},  // [{label:"-15%", profit:12000}, ... "0%" ... "+15%"]
+    risk:        {{RISK_JSON}},         // {market:28, dealMath:14, execution:24}
+    badges:      {{BADGES_JSON}}        // ["Rehab light", "Strong spread"]
+  };
+
+  // ── Render ────────────────────────────────────────────────────────────────
+  const C = { accent:'#EA580C', c2:'#0F766E', c3:'#4F46E5', c4:'#9333EA',
+    ink:'#1A1714', soft:'#6B6862', line:'#E7E3DC', gray:'#C8C3BA' };
+  const money = n => '$' + Math.round(n).toLocaleString();
+  Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+  Chart.defaults.font.size = 11;
+  Chart.defaults.color = C.soft;
+
+  // badges
+  const bWrap = document.getElementById('badges');
+  (DATA.badges || []).forEach(b => {
+    const s = document.createElement('span'); s.className = 'badge'; s.textContent = b; bWrap.appendChild(s);
+  });
+
+  // 1) Strategy net profit — vertical bars, recommended highlighted
+  new Chart(document.getElementById('chartStrategy'), {
+    type:'bar',
+    data:{ labels:(DATA.strategies||[]).map(s=>s.name),
+      datasets:[{ data:(DATA.strategies||[]).map(s=>s.netProfit),
+        backgroundColor:(DATA.strategies||[]).map(s=>s.best?C.accent:C.gray),
+        borderRadius:4, maxBarThickness:54 }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false},
+      tooltip:{callbacks:{label:c=>money(c.parsed.y)}} },
+      scales:{ y:{ ticks:{callback:v=>'$'+(v/1000)+'k'}, grid:{color:C.line} }, x:{ grid:{display:false} } } }
+  });
+
+  // 2) Cost basis — donut
+  new Chart(document.getElementById('chartCostBasis'), {
+    type:'doughnut',
+    data:{ labels:(DATA.costBasis||[]).map(c=>c.label),
+      datasets:[{ data:(DATA.costBasis||[]).map(c=>c.amount),
+        backgroundColor:[C.accent,C.c2,C.c3,C.c4,C.gray], borderColor:'#fff', borderWidth:2 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'58%',
+      plugins:{ legend:{position:'right', labels:{boxWidth:10, padding:8, font:{family:"'Archivo'"}}},
+        tooltip:{callbacks:{label:c=>c.label+': '+money(c.parsed)}} } }
+  });
+
+  // 3) Sensitivity — profit vs ARV delta, markers emphasized
+  new Chart(document.getElementById('chartSensitivity'), {
+    type:'line',
+    data:{ labels:(DATA.sensitivity||[]).map(p=>p.label),
+      datasets:[{ data:(DATA.sensitivity||[]).map(p=>p.profit),
+        borderColor:C.accent, backgroundColor:'rgba(234,88,12,.08)', fill:true,
+        tension:.25, pointRadius:(DATA.sensitivity||[]).map(p=>p.label==='0%'?5:3),
+        pointBackgroundColor:C.accent }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false},
+      tooltip:{callbacks:{title:i=>'ARV '+i[0].label, label:c=>money(c.parsed.y)}} },
+      scales:{ y:{ ticks:{callback:v=>'$'+(v/1000)+'k'}, grid:{color:C.line} }, x:{ grid:{display:false} } } }
+  });
+
+  // 4) Risk components — horizontal bars (0-100, higher = riskier)
+  const r = DATA.risk || {market:0,dealMath:0,execution:0};
+  new Chart(document.getElementById('chartRisk'), {
+    type:'bar',
+    data:{ labels:['Market','Deal math','Execution'],
+      datasets:[{ data:[r.market, r.dealMath, r.execution],
+        backgroundColor:C.accent, borderRadius:4, maxBarThickness:22 }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:c=>c.parsed.x+' / 100'}} },
+      scales:{ x:{ max:100, ticks:{stepSize:25}, grid:{color:C.line} }, y:{ grid:{display:false} } } }
+  });
+</script>
+</body>
+</html>
