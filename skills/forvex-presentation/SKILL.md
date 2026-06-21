@@ -36,7 +36,7 @@ If there isn't an existing analysis to read:
 
 An interactive HTML artifact (Chart.js from CDN) with: KPI tile row (Verdict,
 Deal Score, Best Strategy, Risk), badge row, and four charts — net profit by
-strategy (bar), recommended cost basis (doughnut), profit drivers (tornado),
+strategy (bar), cost basis → net profit (waterfall), profit drivers (tornado),
 risk components (horizontal bar) — plus an action strip (MAO, suggested
 offer, financing) and the confidence/defaults footer.
 
@@ -49,8 +49,8 @@ offer, financing) and the confidence/defaults footer.
    the `DATA` object's arrays from the analysis — the token list and each field's
    source are in the template's top comment:
    - `DATA.strategies` from `all_strategies` (`best:true` on the recommended one).
-   - `DATA.costBasis` = the recommended strategy's cost components (same lines as
-     the PDF one-pager).
+   - `DATA.bridge` = ARV (`total`) → each cost (`down`: Purchase, Rehab, Holding,
+     Selling, Fees) → Net profit (`total`); the downs must sum to ARV − net.
    - `DATA.drivers` + `DATA.baseProfit`: compute the profit swing for each lever
      (ARV, rehab, hold, offer) from the recommended strategy economics per
      `chart-recipes.md`; sort by swing desc and flag any defaulted input.
