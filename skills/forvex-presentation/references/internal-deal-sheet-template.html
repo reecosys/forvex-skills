@@ -60,10 +60,11 @@
   h1{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.02em;}
   .loc{font-size:12.5px;color:var(--ink-soft);margin-top:7px;font-weight:500;}
 
-  .verdict{display:flex;align-items:baseline;gap:14px;margin-top:15px;background:#22201D;color:#EDE7D7;padding:13px 18px;border-radius:6px;}
-  .verdict .v{font-size:16px;font-weight:700;color:#fff;}
+  .verdict{display:flex;align-items:baseline;gap:14px;margin-top:15px;background:var(--paper-2);
+    border:1px solid var(--line);border-left:3px solid var(--accent);padding:13px 18px;border-radius:6px;}
+  .verdict .v{font-size:16px;font-weight:700;color:var(--ink);}
   .verdict .v b{color:var(--accent);}
-  .verdict .thesis{font-size:11.5px;color:#B9B3A8;line-height:1.4;}
+  .verdict .thesis{font-size:11.5px;color:var(--ink-soft);line-height:1.4;}
 
   .stats{display:flex;margin-top:15px;border:1px solid var(--line);border-radius:6px;overflow:hidden;}
   .stat{flex:1;padding:10px 4px 9px;text-align:center;border-right:1px solid var(--line);}
@@ -78,16 +79,15 @@
   .block h2::after{content:"";flex:1;height:1px;background:var(--line);}
 
   /* economics card (strategy-aware rows + net headline) */
-  .econ{background:#22201D;color:#EDE7D7;padding:18px 20px 16px;border-radius:6px;position:relative;overflow:hidden;}
-  .econ::before{content:"";position:absolute;top:-40px;right:-40px;width:130px;height:130px;border:1px solid rgba(234,88,12,.3);border-radius:50%;}
-  .econ .r{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.1);font-size:12px;}
-  .econ .r span:first-child{color:#B9B3A8;}
+  .econ{background:var(--paper-2);border:1px solid var(--line);padding:18px 20px 16px;border-radius:6px;}
+  .econ .r{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px;}
+  .econ .r span:first-child{color:var(--ink-soft);}
   .econ .r span:last-child{font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;font-weight:600;}
-  .econ .r.sub span:last-child{color:#F0B89A;}
-  .econ .net{display:flex;justify-content:space-between;align-items:baseline;margin-top:11px;padding-top:11px;border-top:1.5px solid rgba(255,255,255,.25);}
+  .econ .r.sub span:last-child{color:var(--accent);}
+  .econ .net{display:flex;justify-content:space-between;align-items:baseline;margin-top:11px;padding-top:11px;border-top:1.5px solid var(--ink);}
   .econ .net .lab{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:700;}
-  .econ .net .amt{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:#fff;}
-  .econ .foot{font-size:10px;color:#B9B3A8;margin-top:8px;line-height:1.45;}
+  .econ .net .amt{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:var(--good);}
+  .econ .foot{font-size:10px;color:var(--ink-soft);margin-top:8px;line-height:1.45;}
 
   table{width:100%;border-collapse:collapse;font-size:11px;}
   .mtx th{font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);text-align:right;padding:0 0 5px;border-bottom:1px solid var(--ink);font-weight:600;}
