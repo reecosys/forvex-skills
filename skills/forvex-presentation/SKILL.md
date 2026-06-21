@@ -7,8 +7,9 @@ description: Render an already-analyzed HV deal into a richer artifact format �
 
 You take an already-completed deal analysis (from `forvex-underwriting` earlier in the conversation or from a saved MCP deal analysis) and render it as a richer artifact. You do not re-run the math. You do not change any numbers. You re-format what's already there into a more visual deliverable.
 
-> **Status:** Phase 6 — **complete.** All three modes are built and production-ready:
-> Mode 1 (Dashboard), Mode 2 (Slide deck), Mode 3 (Printable PDF). See `references/`.
+> **Status:** Phase 6 — **complete.** Built and production-ready: Mode 1 (Dashboard),
+> Mode 2 (Slide deck), Mode 3 (Printable PDF), and Mode 4 (Internal deal sheet —
+> operator/confidential, strategy-aware). See `references/`.
 
 ## When to invoke
 
@@ -111,6 +112,34 @@ date, brand). User saves the artifact and prints to PDF via browser.
 Operator artifact — it shows verdict, score, MAO, cost basis. Never strip the
 confidence/defaults footer.
 
+### Mode 4 — Internal deal sheet  *(built)*
+
+A richer, **strategy-aware**, operator/**confidential** one-pager — the internal
+twin of `forvex-wholesale-sheet`. It deliberately shows what the buyer sheet
+suppresses: CRG cost basis / spread / fee, deal id, buy-box fit, deal score.
+**Never give it to a buyer.** Sections: confidential kicker (stage · deal id ·
+tag), verdict + one-line thesis, stats strip, **CRG economics** card, a **ladder**
+(exit or offer), **buy-box fit** checklist, **what the asset supports** (strategy
+matrix with margin + fit pills, CRG lane highlighted), **ARV & confidence** basis
+table, and **risk flags + numbered next steps**.
+
+**Workflow:**
+
+1. Read `references/style-guide.md` and `references/internal-deal-sheet-template.html`
+   (token list + the strategy-aware instructions in its top comment).
+2. **Make the economics card + ladder match the recommended play:**
+   - Flip / wholetail (self-execute): economics rows = Purchase, Rehab, Holding,
+     Selling, Fees → net headline "Net profit"; ladder = offer ladder (or omit);
+     show MAO among the guardrails.
+   - Wholesale / paper: economics rows = Contract/tie-up (in), Resell (out), Gross
+     spread, Less double-close costs → net headline "Net to CRG"; ladder = exit
+     ladder (Resell at · Flipper net · Margin · Your fee), star the sweet spot.
+3. Fill the repeatable blocks (buy-box flags, strategy matrix with the CRG lane,
+   ARV basis rows, risk flags, next steps). **Drop a row/block** the analysis
+   can't support rather than inventing it.
+4. Output one self-contained artifact. Keep the "Internal · Confidential" kicker
+   and the internal disclaimer footer — this sheet carries cost basis and fee.
+
 ## Output
 
 The skill always produces a **single self-contained HTML artifact** (no external dependencies beyond CDN-loaded chart libraries). Claude renders it inline.
@@ -126,6 +155,11 @@ wants something to send a **cash buyer, a wholesale desk, or a buyers list**
 can send buyers"), route to **`forvex-wholesale-sheet`** — it renders an
 audience-inverted sheet that structurally suppresses every operator-internal
 number. Do not build a "buyer mode" of this skill.
+
+The **internal deal sheet** (Mode 4) is the *operator* twin of that buyer sheet —
+it deliberately shows the suppressed numbers (cost basis, spread, fee, buy-box,
+score) for internal use. Keep the two straight: buyer → `forvex-wholesale-sheet`;
+internal/desk/partner → Mode 4 here.
 
 ## What this skill does NOT do
 
@@ -144,6 +178,7 @@ number. Do not build a "buyer mode" of this skill.
 ## Reference files
 
 - `references/pdf-template.html` — print-CSS one-pager ✅ **built**
+- `references/internal-deal-sheet-template.html` — operator/confidential, strategy-aware ✅ **built**
 - `references/style-guide.md` — palette, typography, layout, verdict colors ✅ **built**
 - `references/dashboard-template.html` — interactive Chart.js dashboard ✅ **built**
 - `references/chart-recipes.md` — which Chart.js config for which chart type ✅ **built**
