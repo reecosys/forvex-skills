@@ -7,10 +7,9 @@ description: Render an already-analyzed HV deal into a richer artifact format �
 
 You take an already-completed deal analysis (from `forvex-underwriting` earlier in the conversation or from a saved MCP deal analysis) and render it as a richer artifact. You do not re-run the math. You do not change any numbers. You re-format what's already there into a more visual deliverable.
 
-> **Status:** Phase 6 — **Mode 3 (Printable PDF) is built** and production-ready
-> (see `references/pdf-template.html` + `references/style-guide.md`). Mode 1
-> (Dashboard) and Mode 2 (Slide deck) are still sketches — build them against the
-> same style guide before relying on them.
+> **Status:** Phase 6 — **Mode 1 (Dashboard) and Mode 3 (Printable PDF) are built**
+> and production-ready (see `references/`). Mode 2 (Slide deck) is still a sketch —
+> build it against the same style guide before relying on it.
 
 ## When to invoke
 
@@ -33,19 +32,32 @@ If there isn't an existing analysis to read:
 
 ## Render modes
 
-### Mode 1 — Dashboard
+### Mode 1 — Dashboard  *(built)*
 
-Produces an interactive HTML artifact with:
+An interactive HTML artifact (Chart.js from CDN) with: KPI tile row (Verdict,
+Deal Score, Best Strategy, Risk), badge row, and four charts — net profit by
+strategy (bar), recommended cost basis (doughnut), profit sensitivity to ARV
+(line), risk components (horizontal bar) — plus an action strip (MAO, suggested
+offer, financing) and the confidence/defaults footer.
 
-- **KPI tile row:** Verdict (BUY/NEGOTIATE/PASS), Deal Score, Best Strategy, Risk Score
-- **Strategy comparison bar chart:** Net profit per strategy (Chart.js bar)
-- **Sensitivity curve:** Profit vs. ARV at ±15% range (line chart with markers at ±5%, ±10%, ±15%)
-- **Cost-basis donut:** Breakdown of the recommended strategy's cost basis
-- **Badge row:** Global badges from analysis
-- **Risk component bars:** Market / deal-math / execution
-- **Action row:** MAO at target metrics, suggested offer
+**Workflow:**
 
-Optional: a sliders panel that lets the user (in browser) tweak rent or ARV and see the dashboard recompute. Implementation TBD — may require shipping a small precomputed lookup table since the artifact can't shell out to Python.
+1. Read `references/style-guide.md`, `references/dashboard-template.html`, and
+   `references/chart-recipes.md` (which chart for which data + the sensitivity
+   derivation).
+2. Fill the static `{{TOKENS}}` (address, verdict, KPI tiles, action, footer) and
+   the `DATA` object's arrays from the analysis — the token list and each field's
+   source are in the template's top comment:
+   - `DATA.strategies` from `all_strategies` (`best:true` on the recommended one).
+   - `DATA.costBasis` = the recommended strategy's cost components (same lines as
+     the PDF one-pager).
+   - `DATA.sensitivity` from the analysis sensitivity block, or derive per
+     `chart-recipes.md` (mark the card "approx." and flag defaults if derived).
+   - `DATA.risk` = market / deal-math / execution, each 0–100.
+   - `DATA.badges` from the analysis global badges.
+3. **Omit a card** if the analysis lacks its data rather than faking a chart.
+4. Output the filled HTML as one self-contained artifact. On iPhone Claude, warn
+   that charts may have reduced interactivity but remain viewable.
 
 ### Mode 2 — Slide deck
 
@@ -122,6 +134,6 @@ number. Do not build a "buyer mode" of this skill.
 
 - `references/pdf-template.html` — print-CSS one-pager ✅ **built**
 - `references/style-guide.md` — palette, typography, layout, verdict colors ✅ **built**
-- `references/dashboard-template.html` — base HTML/CSS/JS for dashboard mode *(pending)*
+- `references/dashboard-template.html` — interactive Chart.js dashboard ✅ **built**
+- `references/chart-recipes.md` — which Chart.js config for which chart type ✅ **built**
 - `references/deck-template.html` — base HTML for slide deck *(pending)*
-- `references/chart-recipes.md` — which Chart.js config for which chart type *(pending — dashboard)*
