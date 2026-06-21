@@ -22,9 +22,10 @@ When **forVEX Control MCP** is connected (`https://control.forvex.app/api/mcp`):
 | Concern | Source of truth |
 |--------|------------------|
 | Workspace profiles, price books, categories | `forvex_get_workspace_context` |
-| Default profile, contingency, finish severity | `forvex_get_builder_prefs` |
+| Default strategy preset per deal type, contingency, finish severity | `forvex_get_builder_prefs` |
 | Property + deal linkage | `forvex_resolve_property` |
 | REbuild project row | `forvex_open_or_create_project` |
+| Strategy preset + price book selection | **Server** in `forvex_preview_estimate` (not your job to pick) |
 | Dollar totals | `forvex_preview_estimate` (engine — never calculate yourself) |
 | Missing categories / follow-ups | `forvex_get_missing_inputs` |
 | SKU-level scope (optional) | `forvex_map_observations_to_skus` |
@@ -40,7 +41,7 @@ Follow these steps in order. Do not skip confirmation gates.
 ### 0. Session kickoff
 
 1. Call `forvex_get_workspace_context` once per session (or when workspace changes).
-2. Call `forvex_get_builder_prefs` — note `default_profile_by_deal_type`, `default_price_book_id`, `default_contingency_rate`, `severity_default`, and `missing_fields`.
+2. Call `forvex_get_builder_prefs` — note `default_contingency_rate`, `severity_default`, and `missing_fields`. You do **not** need to pick a profile UUID; the server resolves the strategy preset from deal context.
 3. If the user is new to rehab setup, offer a short onboarding using `forvex_save_builder_prefs` then re-read prefs (mirror `forvex-onboarding` discipline: confirm before write).
 
 If MCP is unreachable, announce at the top:
@@ -64,7 +65,7 @@ Call `forvex_open_or_create_project` with:
 - `core_deal_id` when deal-first, else `core_property_id` from resolve
 - `sqft`, `beds`, `baths` overrides when the user corrected the record
 
-Keep `project.id` for all later steps. Share `deep_link` when present so they can open REbuild.
+Keep `project.id` and `core_deal_id` (when present) for all later steps. Share `deep_link` when present so they can open REbuild.
 
 ### 2b. Choose compute mode (v2 — ask once per estimate)
 
@@ -112,12 +113,16 @@ Call `forvex_preview_estimate` with:
 - `mode`: `raw` | `category` | `bottom_up` from step 2b
 - `project`: sqft, beds, baths, year_built, `contingency_rate` from builder prefs unless overridden
 - `category_conditions`: your map (Title-case severities) — still used as checklist in bottom-up
+- `core_deal_id`: when you linked a deal in step 1–2 (server infers rental / flip / wholesale preset)
+- `deal_type`: only when the user states intent explicitly and there is no deal (`rental` | `flip` | `wholesale`)
 - `user_overrides`: in **bottom_up**, map SKUs → `{ item_id, quantity, exclude_from_contingency? }` after `forvex_map_observations_to_skus` (never invent quantities; ask when unknown)
-- `profile_id` / `price_book_id` from builder prefs or workspace defaults when known
+
+Do **not** pass `profile_id` or `price_book_id` unless the user explicitly overrides the preset (e.g. *"use my flip profile"*). The server resolves both from builder prefs + deal context.
 
 Present:
 
 - **`rehab_summary.total_rehab`** as the authoritative preview total (parity with save RPC)
+- `profile_name` + `profile_resolution` when returned (e.g. *"Using Rental Grade preset"*)
 - `sqft_band` (low / mid / high) when returned
 - **`variance`**: if `flagged` is true (>20% vs $/sqft mid), say so and offer to reconcile — do not silently accept
 - Line items by **real catalog names** — no HVAC-full stand-in for mini-splits, no Landscaping×3 for decks
@@ -136,7 +141,7 @@ Only proceed on clear yes. If they want changes, adjust severities and re-run pr
 
 ### 7. Save draft + verify
 
-1. Call `forvex_save_draft_estimate` with `project_id`, full `engine_output` from the last preview, `profile_id`, `price_book_id`, **`estimate_mode`**, **`sqft_band`**, **`variance`**, and optional **`cross_checks`** from that same preview (server auto-fills $/sqft band if omitted), plus a fresh `idempotency_key` (UUID) if retrying.
+1. Call `forvex_save_draft_estimate` with `project_id`, full `engine_output` from the last preview, **`profile_id` and `price_book_id` from the preview response** (server-resolved), **`estimate_mode`**, **`sqft_band`**, **`variance`**, and optional **`cross_checks`** from that same preview (server auto-fills $/sqft band if omitted), plus a fresh `idempotency_key` (UUID) if retrying.
 2. Call `forvex_get_estimate` with `project_id` or returned `estimate_id` — confirm line item count and `rehab_summary.total_rehab` align with preview.
 3. Return `deep_link` and remind: **final / contract status is in-app only** — you cannot finalize from chat.
 
