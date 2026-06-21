@@ -88,3 +88,7 @@ html{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
 - Show `confidence` and flag any defaulted assumptions in the footer — operator
   artifacts must be honest about how firm the inputs are.
 - Color is never the only signal — verdict/risk also carry a text label.
+- **Internal deal sheet (Mode 4):** same forVEX Edge identity, plus a confidential
+  red tag (`--confidential:#B91C1C`) in the kicker and a dark ink economics card.
+  It is operator/confidential and shows cost basis + fee — keep the "Internal ·
+  Confidential" kicker and internal disclaimer; never hand it to a buyer.
