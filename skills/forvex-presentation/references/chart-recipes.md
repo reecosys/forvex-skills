@@ -23,13 +23,19 @@ doubt, copy the template's config and only swap the data.
 - **Why bar:** discrete comparison across the 3–4 strategies.
 - Recommended bar = accent, others = gray (`s.best ? accent : gray`). No legend.
 
-## 2. Recommended cost basis — doughnut
+## 2. Cost basis → net profit — waterfall (floating bars)
 
-- **Data:** `DATA.costBasis = [{label, amount}]` — the recommended strategy's cost
-  components (Purchase, Rehab, Holding, Selling, Fees). Use the same component
-  lines the PDF one-pager's cost-basis table uses.
-- **Why doughnut:** part-to-whole of where the money goes. `cutout:'58%'`, legend
-  right. Colors cycle accent → secondary ramp → gray.
+- **Data:** `DATA.bridge` = ordered `[{label, value, type}]`: start **ARV**
+  (`type:"total"`), then each cost as `type:"down"` (Purchase, Rehab, Holding,
+  Selling, Fees — same lines as the PDF one-pager), ending **Net profit**
+  (`type:"total"`). The downs must sum to `ARV − net_profit`.
+- **Render:** one bar dataset of floating `[low,high]` segments computed by walking
+  a running total **down** from ARV; `total` bars draw from 0. Totals colored
+  neutral/green (ARV gray, Net profit green); cost steps accent. Tooltip shows
+  `−$cost` for steps, `$value` for totals. No plugin needed.
+- **Why waterfall, not doughnut:** shows the **bridge** from resale value down
+  through each cost to net profit — the path *and* the margin, in deal order. A
+  doughnut only shows cost share, not what's left.
 
 ## 3. Profit drivers — tornado (floating horizontal bar)
 
