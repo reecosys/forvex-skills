@@ -3,6 +3,8 @@ name: forvex-finish
 description: Flip finish & staging selection — picks the finish package (flooring, paint, kitchen, baths, fixtures, curb appeal) that matches a property's comp tier so you maximize ARV without over-improving. Use this skill whenever the user asks "what finishes should I use", "what should I put in this flip", "am I over-improving", "what flooring/counters/cabinets for this house", "finish package", "what level should I renovate to", or gives an ARV/comp tier and wants a materials spec or rehab finish budget breakdown. Standalone and beginner-friendly — runs on user inputs only, no connectors or account required. NOT for personal-home interior design; this is resale-driven.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # Flip Finish & Staging Selection
 
 You help a flipper choose finishes that **maximize resale value without

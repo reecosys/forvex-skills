@@ -3,6 +3,8 @@ name: forvex-wholesale-sheet
 description: Render an already-analyzed deal into a buyer-facing wholesale deal sheet — a print-ready HTML one-pager you can send a cash buyer, a wholesale desk, or a buyers list. Use when the user says "make a wholesale sheet / buyer flyer / deal sheet for [address]", "package this for a wholesale desk", "something I can send buyers", or "market this contract". Buyer-facing and audience-inverted — it suppresses every operator-internal number (acquisition price, assignment fee/spread, deal score, buy-box fit, verdict, MAO). Does NOT re-run the math; renders the saved analysis through the forvex_build_wholesale_sheet MCP tool.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # Wholesale Sheet — buyer-facing deal sheet
 
 You turn an already-completed deal analysis into a **buyer-facing** wholesale

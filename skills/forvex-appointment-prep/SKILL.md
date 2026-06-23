@@ -3,6 +3,8 @@ name: forvex-appointment-prep
 description: Pre-meeting brief for a seller appointment. Pulls property data + comps via RealIE MCP, gathers seller-situation context (motivation signals, listing history, distress indicators), runs the underwriting math, and produces a one-pager brief covering the property, the offer range, likely seller posture, talking points, and red flags. Use when the user says "prep me for the meeting at [address]", "I'm seeing [address] tomorrow", "what should I know about the seller at [address]", "appointment brief for [address]".
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # HomeVestors Appointment Prep
 
 You are preparing a HomeVestors franchisee for an in-person (or call) appointment with a seller. The goal: walk into that meeting with the property numbers in your head, a defensible offer range, an informed read on the seller's likely posture, and a short list of questions you need answered to lock the deal in or kill it.
@@ -36,7 +38,7 @@ If forVEX tools error or do not resolve, treat MCP as down for this session and 
 
 **Do not fall back to scraping Zillow / Redfin / Trulia / Spokeo / Realtor.com for property facts.** This skill is not a web scraper. If MCP is down, work from what the franchisee tells you and flag every defaulted value.
 
-**Step 2b — Server-first data pull (MCP live).** Read `../forvex-underwriting/references/data-sources.md` for the canonical tool list. For appointment prep specifically, the priority calls are:
+**Step 2b — Server-first data pull (MCP live).** Read `references/platform/mcp-tools.md` for the canonical tool list. For appointment prep specifically, the priority calls are:
 
 - `forvex_get_property(address)` — resolve `property_id` and property fundamentals
 - `forvex_list_deals({ property_id })` and `forvex_get_deal(id)` — only when an existing deal record exists for this address. When `forvex_get_deal` returns, read `readvise_property` (motivation, lead_source, lead_type, exit_strategy, financing) and `analysis.context` — these pre-fill seller context for step 3.
@@ -90,7 +92,7 @@ You do not need to render the full one-pager here. You need the verdict, recomme
 
 Use `templates/appointment-prep.md`. Structure:
 
-1. **Top of mind** — property + verdict + recommended strategy + **Pre-Offer Number** + MAO range + **math basis line** (posture, rate, hold, rehab, listing %, franchise fee). The math basis line is required per `../forvex-underwriting/references/forvex-frame.md` — never omit it.
+1. **Top of mind** — property + verdict + recommended strategy + **Pre-Offer Number** + MAO range + **math basis line** (posture, rate, hold, rehab, listing %, franchise fee). The math basis line is required per `references/platform/forvex-frame.md` — never omit it.
 2. **Property snapshot** — beds/baths/sqft/year, condition signals, comp-validated ARV range with confidence
 3. **Seller posture read** — what we know, what we infer, motivation signal strength (low/medium/high), probability of accepting an offer at MAO (rough)
    - **Payoff estimate block** — render when `forvex_get_property` returned `last_sold_price` + `last_sold_date`. Pass these through to `forvex_underwrite` as `last_sold_price` and `last_sold_year`; use the `payoff_estimate` object from the result. Make payoff the #1 on-site question if estimated payoff > target offer.
@@ -101,7 +103,7 @@ Use `templates/appointment-prep.md`. Structure:
 6. **Talking points** — 3–4 angles to lead with based on what we know about the seller
 7. **Likely objections** — 2–3 objections most likely for this seller's posture, with framed responses (see `references/objection-handling.md`)
 8. **Red flags / due diligence items** — things to verify on-site that could change the math
-9. **Negotiation framing** — Sandler + Voss notes specific to this seller's likely posture (see `../forvex-underwriting/references/forvex-frame.md`)
+9. **Negotiation framing** — Sandler + Voss notes specific to this seller's likely posture (see `references/platform/forvex-frame.md`)
 
 ### 6. Suggested follow-ups at the end
 
@@ -180,7 +182,7 @@ Quick reference; see `references/question-bank.md` for full mapping:
 
 ## Negotiation framing — Sandler + Voss in practice
 
-From `../forvex-underwriting/references/forvex-frame.md`:
+From `references/platform/forvex-frame.md`:
 
 - **Lead with speed and certainty** — "I can close in 14 days, no contingencies, cash" is HV's edge over retail offers.
 - **Anchor on rehab scope, not ARV** — sellers argue values; they don't argue rehab costs.
@@ -218,6 +220,6 @@ The Pre-Offer is purchase-only and intentionally simpler than the underwriting M
 - `references/question-bank.md` — seller-context questions and motivation signal taxonomy
 - `references/objection-handling.md` — common objections with Sandler/Voss framed responses
 - `templates/appointment-prep.md` — the brief output template
-- `../forvex-underwriting/references/data-sources.md` — MCP tool surface (shared)
-- `../forvex-underwriting/references/comp-evaluation.md` — comp interpretation (shared)
-- `../forvex-underwriting/references/forvex-frame.md` — Sandler + Voss negotiation framing (shared)
+- `references/platform/mcp-tools.md` — MCP tool surface (shared)
+- `references/platform/comp-evaluation.md` — comp interpretation (shared)
+- `references/platform/forvex-frame.md` — Sandler + Voss negotiation framing (shared)

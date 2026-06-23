@@ -1,6 +1,6 @@
 # Resolve Context — Address → Deal/Property
 
-Every PM skill that touches a specific property must first answer: **which `core_deal_id` (or bare `core_property_id`) does the user mean?** This reference is copied into each PM skill so the resolution logic stays identical.
+Every pipeline / project skill that touches a specific property must first answer: **which `core_deal_id` (or bare `core_property_id`) does the user mean?** Canonical copy lives in `platform/references/` and is vendored into each `.skill` as `references/platform/resolve-context.md`.
 
 ## When you already have an id
 

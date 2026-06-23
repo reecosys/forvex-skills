@@ -3,6 +3,8 @@ name: forvex-mao
 description: Maximum Allowable Offer (MAO) calculator for house flips — the most you can pay for a property and still hit your profit target. Use this skill whenever the user asks "what should I offer", "what's my MAO", "max offer", "how much can I pay for this house", "run the 65% rule" or "run the rule of thumb", or gives an ARV and rehab number and wants an offer figure. Standalone and beginner-friendly — runs on user inputs only, no connectors or account required. Also handles "what if" follow-ups on ARV, rehab, margin, financing, and hold time.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # Maximum Allowable Offer (MAO)
 
 You help a real-estate investor find the **highest price they can pay** for a

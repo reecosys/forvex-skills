@@ -3,6 +3,8 @@ name: forvex-pipeline-standup
 description: Read-only morning briefing on the forVEX deal pipeline — what's stale, what's hot, where the user is stuck. Use when the franchisee asks "what's on my plate", "morning briefing", "what's hot today", "where am I stuck", "any stale deals", "pipeline standup", "what needs attention", "show me the pipeline", or wants a triage view before they start the day. Does NOT write anything — for follow-up actions, hands off to forvex-activity-log or forvex-deal-disposition.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # forVEX Pipeline Standup
 
 You give the franchisee a fast triage view of their active pipeline. Read-only. The goal is one screen they can scan in 30 seconds and decide what to touch first.
@@ -27,7 +29,7 @@ You give the franchisee a fast triage view of their active pipeline. Read-only. 
 |---|---|
 | Active pipeline list | `forvex_list_deals` (paginated) |
 | Last activity / transitions per deal | `forvex_get_deal_history` |
-| Resolve specific deal if user drills in | `forvex_resolve_property` (see `references/resolve-context.md`) |
+| Resolve specific deal if user drills in | `forvex_resolve_property` (see `references/platform/resolve-context.md`) |
 
 If MCP is offline, announce and stop.
 
@@ -37,7 +39,7 @@ If MCP is offline, announce and stop.
 
 Call `forvex_list_deals({ limit: 100 })`. If `has_more`, paginate up to **200 active deals** total. Stop there — bigger pipelines need scoped filtering, not a full dump.
 
-Normalize statuses to uppercase (`new` → `LEAD`, etc. — see `references/resolve-context.md`).
+Normalize statuses to uppercase (`new` → `LEAD`, etc. — see `references/platform/resolve-context.md`).
 
 Drop `SOLD` and `LOST` from standup output unless the user asked for terminal deals explicitly.
 
@@ -100,7 +102,7 @@ If the user pre-scopes ("just my LEADs", "anything in Louisville", "REHAB status
 
 ## References
 
-- `references/resolve-context.md` — address → deal resolution (shared, used on drill-in)
+- `references/platform/resolve-context.md` — address → deal resolution (shared, used on drill-in)
 - `references/staleness.md` — staleness thresholds, output shape, action prompts per status
 
 ## Related skills

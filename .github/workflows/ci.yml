@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint skills registry and references
+        run: python3 scripts/lint-skills.py
+
+      - name: Package all skills (smoke test)
+        run: |
+          chmod +x package.sh scripts/build-manifest.sh
+          ./package.sh
+
+      - name: Build manifest (dry-run version)
+        run: ./scripts/build-manifest.sh v0.0.0-ci
+
+      - name: Run Python script tests
+        run: |
+          for test in skills/*/scripts/test_*.py; do
+            [ -f "$test" ] || continue
+            echo "==> $test"
+            python3 "$test"
+          done

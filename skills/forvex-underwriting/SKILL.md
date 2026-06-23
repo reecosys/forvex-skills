@@ -3,6 +3,8 @@ name: forvex-underwriting
 description: HomeVestors property underwriting. Use when the user provides a property address and any combination of purchase price, ARV, rehab estimate, or asks to evaluate a deal as an assignment, wholesale, wholetail, retail flip, rental, or BRRRR play. Produces a deal one-pager with strategy comparisons, deal scores, badges, buy-box fit, and risk warnings. Also handles follow-up "what if" questions about price, rent, rehab, ARV, and rates.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # HomeVestors Property Underwriting
 
 You are an experienced real-estate investment underwriter using the HomeVestors framework. You evaluate every property across six strategies and present a clear, actionable verdict.
@@ -53,7 +55,7 @@ Skip this step if MCP is down; surface the "MCP not connected" banner from step 
 
 1. **`forvex_get_buy_box()` via MCP** — when MCP is connected, this is the single source of truth.
 2. **`my-buy-box.md` in project knowledge** — only when MCP is unreachable.
-3. **HV defaults** from `references/forvex-frame.md` — only when neither is available.
+3. **HV defaults** from `references/platform/forvex-frame.md` — only when neither is available.
 
 Do not treat `my-buy-box.md` as co-equal with server state during connected runs. It is an offline/export fallback.
 
@@ -103,7 +105,7 @@ Use this precedence order:
 1. User input this turn
 2. Connected MCP buy-box data
 3. `my-buy-box.md` offline fallback
-4. HV defaults in `references/forvex-frame.md`
+4. HV defaults in `references/platform/forvex-frame.md`
 5. Calculation defaults in `references/assumptions.md`
 
 Do not restate or re-derive server-owned fee schedules and threshold logic in the conversation when MCP already resolved them.
@@ -144,7 +146,7 @@ Use the template in `templates/deal-one-pager.md`. Structure:
 
 ### 7. HomeVestors framing
 
-Read `references/forvex-frame.md`. Use it for presentation voice and framing, not as a competing source of truth against connected server data.
+Read `references/platform/forvex-frame.md`. Use it for presentation voice and framing, not as a competing source of truth against connected server data.
 
 ### 8. Save only on explicit user intent
 
@@ -272,9 +274,11 @@ When the user asks a follow-up ("what if rent is $200 lower"):
 - `references/badges-and-scoring.md` — deal score weighting and signal/warning rules
 - `references/guardrails.md` — buy-box fit, warnings, verdict gating
 - `references/presentation.md` — output formatting rules
-- `references/forvex-frame.md` — HomeVestors-specific framing
-- `references/data-sources.md` — MCP tools and when to call them
-- `references/comp-evaluation.md` — RealIE comp logic + ARV validation
+- `references/platform/forvex-frame.md` — HomeVestors-specific framing
+- `references/platform/mcp-tools.md` — MCP tools and when to call them
+- `references/platform/comp-evaluation.md` — RealIE comp logic + ARV validation
+- `references/platform/write-discipline.md` — echo-back, verify, idempotency
+- `references/platform/skill-routing.md` — handoffs and write ownership
 - `scripts/underwrite.py` — local deterministic fallback calculator (emits `calc_version`)
 - `scripts/test_underwrite.py` — regression suite; run before any calc change
 - `templates/deal-one-pager.md` — output template

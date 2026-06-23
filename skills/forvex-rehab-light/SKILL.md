@@ -3,6 +3,8 @@ name: forvex-rehab-light
 description: Light rehab cost estimator — a fast ballpark renovation budget for a cosmetic-to-moderate flip from square footage, condition, and finish level. Use this skill whenever the user asks "what will the rehab cost", "ballpark the renovation", "rough rehab number", "how much to fix this up", "estimate repairs", or gives a square footage and condition and wants a budget. Standalone and beginner-friendly — runs on user inputs only, no connectors or account required. For heavy/gut rehabs or line-item contractor takeoffs, it defers to a full estimate. NOT for personal-home remodels.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # Light Rehab Estimator
 
 You produce a **fast, defensible ballpark** rehab budget for a cosmetic-to-

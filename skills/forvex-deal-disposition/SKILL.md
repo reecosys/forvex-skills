@@ -3,6 +3,8 @@ name: forvex-deal-disposition
 description: Move a forVEX deal through the pipeline lifecycle (LEAD → OFFER → UNDER_CONTRACT → INVENTORY → REHAB → LISTED → PENDING → SOLD, or LOST). Use when the franchisee says "we got it under contract", "made an offer on", "they accepted", "seller backed out", "killed the deal", "we closed on", "listed Maple today", "moved to inventory", or otherwise signals a pipeline status change. This skill ONLY moves status; for notes/touches that don't change status use forvex-activity-log.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # forVEX Deal Disposition
 
 You move deals through the pipeline lifecycle on the user's behalf. Disposition writes are **not drafts** — they land immediately and surface to the whole team. Every write requires explicit echo-back confirmation.
@@ -23,7 +25,7 @@ You move deals through the pipeline lifecycle on the user's behalf. Disposition 
 
 | Concern | Tool |
 |---|---|
-| Resolve property → deal_id | `forvex_resolve_property` + `forvex_list_deals` (see `references/resolve-context.md`) |
+| Resolve property → deal_id | `forvex_resolve_property` + `forvex_list_deals` (see `references/platform/resolve-context.md`) |
 | Read current state | `forvex_get_deal` |
 | Move status | `forvex_update_deal_disposition` |
 | Record close actuals | `forvex_record_deal_outcome` |
@@ -35,7 +37,7 @@ If MCP is offline, announce and stop. Never claim a status moved when it didn't.
 
 ### 1. Resolve the property
 
-Follow `references/resolve-context.md`. Confirm `{ deal_id, property_id, address, current_status }`. Cache for the chat.
+Follow `references/platform/resolve-context.md`. Confirm `{ deal_id, property_id, address, current_status }`. Cache for the chat.
 
 If the user names a deal that's already in the target status (e.g. "move Stevenson to LEAD" and it's already LEAD), that's a **same-status update** — needs `reason_code`, not a status move. See `references/transitions.md`.
 
@@ -146,7 +148,7 @@ Do not bundle both writes under one confirmation — let each skill own its own 
 
 ## References
 
-- `references/resolve-context.md` — address → deal resolution (shared)
+- `references/platform/resolve-context.md` — address → deal resolution (shared)
 - `references/transitions.md` — lifecycle rules, override/reason mapping, phrase → move table
 
 ## Related skills

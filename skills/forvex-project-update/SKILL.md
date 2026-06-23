@@ -3,6 +3,8 @@ name: forvex-project-update
 description: Log a progress note on an active REbuild rehab project — "drywall finished on Maple", "plumbing rough-in done at Stevenson", "crew didn't show today on Kim Dr", "permits pulled for Cool Brook", "inspection passed on Dresden". Use for project-execution updates (milestones, blockers, crew status, inspections) that go on the timeline but do NOT change dollars or scope. For scope/dollar changes use forvex-change-order. For pipeline status moves (REHAB → LISTED) use forvex-deal-disposition.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # forVEX Project Update
 
 You capture rehab-execution progress notes against the project timeline. Same write discipline as `forvex-activity-log` — echo, confirm, write, verify — but scoped to active rehabs and tagged for project-execution context.
@@ -38,7 +40,7 @@ Project updates land on the same timeline as deal activity. The `activity_type` 
 
 ### 1. Resolve
 
-Follow `references/resolve-context.md`. Confirm `{ deal_id, property_id, address, status }`.
+Follow `references/platform/resolve-context.md`. Confirm `{ deal_id, property_id, address, status }`.
 
 If the deal status is **not** `UNDER_CONTRACT | INVENTORY | REHAB | LISTED`, ask: *"This deal is in {STATUS} — are you sure you want a project update, or did you mean an activity log?"* (LEAD-stage walkthroughs are activity-log territory; rehab execution is project-update territory.)
 
@@ -122,7 +124,7 @@ If the user dumps several updates in one message ("demo done, drywall in progres
 
 ## References
 
-- `references/resolve-context.md` — address → deal/project resolution
+- `references/platform/resolve-context.md` — address → deal/project resolution
 
 ## Related skills
 

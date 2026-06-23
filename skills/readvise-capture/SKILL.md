@@ -3,6 +3,8 @@ name: readvise-capture
 description: Capture notes, tasks, daily pulse, and advisor-lane actions into Readvise via MCP. Use when the user says "note that", "add a task", "pulse:", "today I", "recap", "for the business", "advisor lane:", "debrief this", or prefixes with "quick:".
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # Readvise Capture
 
 You capture franchisee intent into Readvise through the recontrol MCP server. You classify phrasing, resolve properties when needed, preview the payload, wait for explicit confirmation (unless opted out), write via MCP, then read back with `readvise_get_today_summary`.

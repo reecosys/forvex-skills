@@ -2,10 +2,8 @@
 # Generate manifest.json describing every skill in this release.
 #
 # Args: VERSION (semver tag, e.g. v0.1.0)
-# Reads: skills/*/SKILL.md (frontmatter) + skills/*/tier.txt
+# Reads: skills/*/SKILL.md, skills/SKILL_REGISTRY.json, skills/*/tier.txt
 # Writes: build/manifest.json
-#
-# Consumed by forvex.app /try and /install pages.
 
 set -euo pipefail
 
@@ -13,65 +11,69 @@ VERSION="${1:?usage: build-manifest.sh <version> (e.g. v0.1.0)}"
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SKILLS_DIR="${REPO_DIR}/skills"
 BUILD_DIR="${REPO_DIR}/build"
+REGISTRY="${SKILLS_DIR}/SKILL_REGISTRY.json"
 OUT="${BUILD_DIR}/manifest.json"
 RELEASE_BASE="https://github.com/reecosys/forvex-skills/releases/download/${VERSION}"
 
 mkdir -p "${BUILD_DIR}"
 
-extract_field() {
-    local file="$1"
-    local field="$2"
-    awk -v field="${field}" '
-        /^---$/ { fm = !fm; next }
-        fm && $0 ~ "^"field":" {
-            sub("^"field":[[:space:]]*", "")
-            print
-            exit
-        }
-    ' "${file}"
+python3 - "${VERSION}" "${REGISTRY}" "${SKILLS_DIR}" "${OUT}" "${RELEASE_BASE}" <<'PY'
+import json
+import re
+import sys
+from pathlib import Path
+
+version, registry_path, skills_dir, out_path, release_base = sys.argv[1:6]
+registry = json.loads(Path(registry_path).read_text())
+skills_root = Path(skills_dir)
+release_base = release_base.rstrip("/")
+
+fm_re = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
+
+def frontmatter(skill_md: Path) -> dict:
+    text = skill_md.read_text(encoding="utf-8")
+    m = fm_re.match(text)
+    if not m:
+        return {}
+    data = {}
+    for line in m.group(1).splitlines():
+        if ":" in line:
+            k, _, v = line.partition(":")
+            data[k.strip()] = v.strip()
+    return data
+
+entries = []
+for skill_id, meta in sorted(registry["skills"].items()):
+    skill_md = skills_root / skill_id / "SKILL.md"
+    if not skill_md.is_file():
+        continue
+    fm = frontmatter(skill_md)
+    tier_file = skills_root / skill_id / "tier.txt"
+    tier = meta.get("tier", "mcp")
+    if tier_file.is_file():
+        tier = tier_file.read_text(encoding="utf-8").strip()
+    entries.append({
+        "id": skill_id,
+        "name": fm.get("name", skill_id),
+        "tier": tier,
+        "lane": meta.get("lane"),
+        "description": fm.get("description", ""),
+        "mcp_min_version": registry.get("mcp_min_version"),
+        "writes": meta.get("writes", []),
+        "handoffs": meta.get("handoffs", []),
+        "download_url": f"{release_base}/{skill_id}.skill",
+    })
+
+manifest = {
+    "version": version,
+    "mcp_min_version": registry.get("mcp_min_version"),
+    "contract": registry.get("contract"),
+    "generated_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+    "release_url": f"https://github.com/reecosys/forvex-skills/releases/tag/{version}",
+    "bundles": registry.get("bundles", {}),
+    "skills": entries,
 }
 
-json_escape() {
-    python3 -c 'import json,sys; print(json.dumps(sys.stdin.read().strip()))'
-}
-
-ENTRIES=""
-FIRST=1
-for skill_dir in "${SKILLS_DIR}"/*/; do
-    skill=$(basename "${skill_dir}")
-    skill_md="${skill_dir}SKILL.md"
-    tier_file="${skill_dir}tier.txt"
-
-    [[ -f "${skill_md}" ]] || continue
-    tier="mcp"
-    [[ -f "${tier_file}" ]] && tier=$(tr -d '[:space:]' < "${tier_file}")
-
-    name=$(extract_field "${skill_md}" name)
-    description=$(extract_field "${skill_md}" description)
-    [[ -z "${name}" ]] && name="${skill}"
-
-    name_json=$(printf '%s' "${name}" | json_escape)
-    desc_json=$(printf '%s' "${description}" | json_escape)
-    tier_json=$(printf '%s' "${tier}" | json_escape)
-    url_json=$(printf '%s' "${RELEASE_BASE}/${skill}.skill" | json_escape)
-
-    [[ ${FIRST} -eq 0 ]] && ENTRIES+=","
-    FIRST=0
-    ENTRIES+=$(printf '\n    {"name": %s, "tier": %s, "description": %s, "download_url": %s}' \
-        "${name_json}" "${tier_json}" "${desc_json}" "${url_json}")
-done
-
-VERSION_JSON=$(printf '%s' "${VERSION}" | json_escape)
-GENERATED_AT_JSON=$(printf '%s' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" | json_escape)
-
-cat > "${OUT}" <<EOF
-{
-  "version": ${VERSION_JSON},
-  "generated_at": ${GENERATED_AT_JSON},
-  "release_url": "https://github.com/reecosys/forvex-skills/releases/tag/${VERSION}",
-  "skills": [${ENTRIES}
-  ]
-}
-EOF
-
-echo "✓ ${OUT}"
+Path(out_path).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+print(f"✓ {out_path} ({len(entries)} skills)")
+PY

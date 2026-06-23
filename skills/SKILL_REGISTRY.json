@@ -1,0 +1,212 @@
+{
+  "mcp_min_version": "0.3.0",
+  "contract": "reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md",
+  "bundles": {
+    "demo": {
+      "label": "Demo (no account)",
+      "skills": ["forvex-mao", "forvex-rehab-light", "forvex-finish", "forvex-postmortem"]
+    },
+    "redeal": {
+      "label": "REdeal — acquire & close",
+      "skills": [
+        "forvex-onboarding",
+        "forvex-underwriting",
+        "forvex-appointment-prep",
+        "forvex-deal-disposition",
+        "forvex-activity-log",
+        "forvex-pipeline-standup",
+        "forvex-presentation",
+        "forvex-wholesale-sheet"
+      ]
+    },
+    "rebuild": {
+      "label": "REbuild — estimate & execute",
+      "skills": [
+        "forvex-rehab-estimator",
+        "forvex-change-order",
+        "forvex-project-status",
+        "forvex-project-update"
+      ]
+    },
+    "readvise": {
+      "label": "Readvise — capture",
+      "skills": ["readvise-capture"]
+    }
+  },
+  "skills": {
+    "forvex-activity-log": {
+      "lane": "redeal",
+      "tier": "mcp",
+      "writes": ["forvex_log_activity"],
+      "reads": ["forvex_resolve_property", "forvex_list_deals"],
+      "handoffs": ["forvex-deal-disposition"],
+      "platform_refs": ["resolve-context", "write-discipline", "skill-routing"]
+    },
+    "forvex-appointment-prep": {
+      "lane": "redeal",
+      "tier": "mcp",
+      "writes": ["forvex_update_deal_disposition", "forvex_log_activity", "forvex_record_deal_outcome"],
+      "reads": [
+        "forvex_get_property",
+        "forvex_list_deals",
+        "forvex_get_deal",
+        "forvex_underwrite",
+        "forvex_get_flood_data",
+        "forvex_get_market_intelligence",
+        "forvex_get_comps",
+        "forvex_get_comps_expanded",
+        "forvex_get_comp_detail",
+        "forvex_get_rent_estimate"
+      ],
+      "handoffs": ["forvex-underwriting", "forvex-deal-disposition", "forvex-activity-log"],
+      "platform_refs": ["mcp-tools", "forvex-frame", "comp-evaluation", "skill-routing", "write-discipline"]
+    },
+    "forvex-change-order": {
+      "lane": "rebuild",
+      "tier": "mcp",
+      "writes": ["forvex_update_estimate"],
+      "reads": ["forvex_resolve_property", "forvex_list_deals", "forvex_get_estimate", "forvex_preview_estimate"],
+      "handoffs": ["forvex-project-update", "forvex-rehab-estimator"],
+      "platform_refs": ["resolve-context", "write-discipline", "skill-routing"]
+    },
+    "forvex-deal-disposition": {
+      "lane": "redeal",
+      "tier": "mcp",
+      "writes": ["forvex_update_deal_disposition", "forvex_record_deal_outcome"],
+      "reads": ["forvex_resolve_property", "forvex_list_deals", "forvex_get_deal", "forvex_get_deal_history"],
+      "handoffs": ["forvex-rehab-estimator", "forvex-postmortem"],
+      "platform_refs": ["resolve-context", "write-discipline", "skill-routing"]
+    },
+    "forvex-finish": {
+      "lane": "demo",
+      "tier": "demo",
+      "writes": [],
+      "reads": [],
+      "handoffs": [],
+      "platform_refs": ["skill-routing"]
+    },
+    "forvex-mao": {
+      "lane": "demo",
+      "tier": "demo",
+      "writes": [],
+      "reads": [],
+      "handoffs": ["forvex-underwriting"],
+      "platform_refs": ["skill-routing"]
+    },
+    "forvex-onboarding": {
+      "lane": "redeal",
+      "tier": "mcp",
+      "writes": ["forvex_save_buy_box"],
+      "reads": ["forvex_get_buy_box", "forvex_whoami"],
+      "handoffs": ["forvex-underwriting"],
+      "platform_refs": ["mcp-tools", "write-discipline", "skill-routing"]
+    },
+    "forvex-pipeline-standup": {
+      "lane": "redeal",
+      "tier": "mcp",
+      "writes": [],
+      "reads": ["forvex_list_deals", "forvex_resolve_property"],
+      "handoffs": ["forvex-activity-log", "forvex-deal-disposition"],
+      "platform_refs": ["resolve-context", "skill-routing"]
+    },
+    "forvex-postmortem": {
+      "lane": "demo",
+      "tier": "demo",
+      "writes": [],
+      "reads": [],
+      "handoffs": [],
+      "platform_refs": ["skill-routing"]
+    },
+    "forvex-presentation": {
+      "lane": "redeal",
+      "tier": "mcp",
+      "writes": [],
+      "reads": ["forvex_get_deal", "forvex_get_property"],
+      "handoffs": [],
+      "platform_refs": ["skill-routing"]
+    },
+    "forvex-project-status": {
+      "lane": "rebuild",
+      "tier": "mcp",
+      "writes": [],
+      "reads": ["forvex_resolve_property", "forvex_list_deals", "forvex_get_estimate", "forvex_get_workspace_context"],
+      "handoffs": ["forvex-change-order", "forvex-project-update"],
+      "platform_refs": ["resolve-context", "skill-routing"]
+    },
+    "forvex-project-update": {
+      "lane": "rebuild",
+      "tier": "mcp",
+      "writes": [],
+      "reads": ["forvex_resolve_property", "forvex_list_deals", "forvex_get_estimate"],
+      "handoffs": ["forvex-change-order"],
+      "platform_refs": ["resolve-context", "write-discipline", "skill-routing"]
+    },
+    "forvex-rehab-estimator": {
+      "lane": "rebuild",
+      "tier": "mcp",
+      "writes": ["forvex_save_draft_estimate", "forvex_save_builder_prefs"],
+      "reads": [
+        "forvex_get_workspace_context",
+        "forvex_get_builder_prefs",
+        "forvex_resolve_property",
+        "forvex_open_or_create_project",
+        "forvex_get_missing_inputs",
+        "forvex_preview_estimate",
+        "forvex_map_observations_to_skus",
+        "forvex_get_estimate"
+      ],
+      "handoffs": ["forvex-underwriting", "forvex-change-order"],
+      "platform_refs": ["write-discipline", "skill-routing"]
+    },
+    "forvex-rehab-light": {
+      "lane": "demo",
+      "tier": "demo",
+      "writes": [],
+      "reads": [],
+      "handoffs": ["forvex-rehab-estimator"],
+      "platform_refs": ["skill-routing"]
+    },
+    "forvex-underwriting": {
+      "lane": "redeal",
+      "tier": "mcp",
+      "writes": ["forvex_save_deal", "forvex_capture_deal_brief"],
+      "reads": [
+        "forvex_get_property",
+        "forvex_list_deals",
+        "forvex_get_deal",
+        "forvex_get_deal_history",
+        "forvex_underwrite",
+        "forvex_get_buy_box",
+        "forvex_get_comps",
+        "forvex_get_comps_expanded",
+        "forvex_get_flood_data",
+        "forvex_get_market_intelligence",
+        "forvex_get_rent_estimate",
+        "forvex_whoami"
+      ],
+      "handoffs": ["forvex-appointment-prep", "forvex-presentation"],
+      "platform_refs": ["mcp-tools", "forvex-frame", "comp-evaluation", "write-discipline", "skill-routing"]
+    },
+    "forvex-wholesale-sheet": {
+      "lane": "redeal",
+      "tier": "mcp",
+      "writes": ["forvex_build_wholesale_sheet"],
+      "reads": ["forvex_get_deal", "forvex_get_property"],
+      "handoffs": [],
+      "platform_refs": ["skill-routing"]
+    },
+    "readvise-capture": {
+      "lane": "readvise",
+      "tier": "mcp",
+      "writes": [
+        "readvise_create_property_note",
+        "readvise_create_task",
+        "readvise_append_pulse_today",
+        "readvise_create_advisor_action"
+      ],
+      "reads": ["readvise_resolve_property", "readvise_get_today_summary"],
+      "handoffs": [],
+      "platform_refs": ["write-discipline", "skill-routing"]
+    }
+  }
+}
