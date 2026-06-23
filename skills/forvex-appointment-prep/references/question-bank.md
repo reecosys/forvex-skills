@@ -38,6 +38,39 @@ The lead source alone isn't a motivation signal, but it shapes how to frame the 
 
 ---
 
+## Lead type taxonomy (Readvise)
+
+Ask when lead source is **Dig Lead** or **Referral** and the field is not already on file (`readvise_property.lead_type`).
+
+| Readvise lead type | When to use |
+|---|---|
+| **Mailers** | Responded to direct mail / postcard campaign |
+| **Paid** | Paid ads (PPC, social, radio with tracking) |
+| **Referral** | Agent, prior customer, or partner referral |
+| **Organic** | Unpaid web/social inbound |
+| **Other** | Does not fit the above |
+
+---
+
+## Skill → Operate label mapping (save path)
+
+Use these when passing `context` to `forvex_save_deal` — recontrol normalizes to Operate Details-tab labels.
+
+| Skill / snake_case input | Operate column value |
+|---|---|
+| `inherited`, `probate` | Inherited |
+| `financial_distress` | Financial distress |
+| `landlord_burnout` | Landlord burnout |
+| `dig` | Dig Lead |
+| `web` | Web |
+| `advertising`, `direct_mail` | Advertising |
+| `mailers` | Mailers |
+| `paid` | Paid |
+| `referral` | Referral |
+| `organic` | Organic |
+
+---
+
 ## Motivation taxonomy (Readvise dropdown)
 
 These are the categories the franchisee selects in Readvise. The skill should use the same terminology and not introduce alternative phrasing.

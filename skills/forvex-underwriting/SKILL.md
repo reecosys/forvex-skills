@@ -209,9 +209,31 @@ Omit sections by setting the string to `null` or the array to `[]`. Use plain-te
 5. If `forvex_save_deal` returns `deduped: true`, tell the user the analysis was already on file.
 6. **If `forvex_save_deal` is unavailable** (MCP cycling, tool dropped out of scope, network error): show the user a compact markdown rendering of the `session_summary` so they have the digest, but **retain the exact JSON payload (analysis + context) in this thread**. When tools return — even later in the same conversation — retry with the *same* payload and a *fresh* `idempotency_key`. Do not rebuild the summary from scratch; the conversation may have moved on and a re-derived digest would lose detail.
 
+#### 8.5 Close-out retrospective (feeds self-learning)
+
+**Only after a successful step 8 save the franchisee explicitly requested** — same session, same close-out. Never run this on the skill's own initiative; if they did not ask to save, skip 8.5 entirely.
+
+`forvex_save_deal` already carries rich narrative in `context.session_summary` (seller, market, decisions, open questions, next steps) for the Operate memo. **`forvex_capture_deal_brief` is a separate, additional call** — it persists the learning-layer brief plus triaged `corrections[]` and `suggested_adjustment` payloads that `save_deal` does not accept. Reuse `decisions` / `open_questions` / `next_steps` from the `session_summary` you already built; do not re-author narrative. The net-new work here is triaging engine overrides.
+
+After verify succeeds, call `forvex_capture_deal_brief`:
+
+1. Pass `deal_id` (and `analysis_id` from the save response if you have it).
+2. Echo `decisions`, `open_questions`, `next_steps` from your `session_summary` (omit empty arrays).
+3. For each place you overrode or corrected the engine this session, add a `corrections[]` entry and **triage it**:
+   - Wrong source data (comp/attribute/sale) → `DATA_BUG` (no adjustment; it is a ticket).
+   - Engine assumption systematically off → `CALIBRATION` + a `suggested_adjustment`.
+   - Operator/buy-box preference → `PREFERENCE` + a `suggested_adjustment`.
+4. Only attach a `suggested_adjustment` for CALIBRATION/PREFERENCE. Use a `runtime` target only for an injectable input (rehab, market_risk, hm_rate, hm_points, lender_ltv_cap, rent); otherwise use `promotion_target: "source"`.
+5. Set `outcome_unknown: true` until the deal closes.
+6. Surface the returned `data_bugs[]` to the operator as items to fix upstream.
+
+Do NOT invent corrections — only capture real overrides/judgments from this run. Captured CALIBRATION/PREFERENCE adjustments are inert (shadow/candidate) until a super admin approves them in recontrol → /learning.
+
+Skip 8.5 if MCP is offline or step 8 did not complete successfully.
+
 Never call `forvex_save_deal` on the skill's own initiative. The franchisee must explicitly ask.
 
-Status transitions and post-meeting events (counters, walkaways, lost deals) are **not** the underwriting skill's job — those go through `forvex-appointment-prep` via `forvex_update_deal_disposition` and `forvex_log_activity`.
+Status transitions and post-meeting events (counters, walkaways, lost deals) are **not** the underwriting skill's job — those go through `forvex-appointment-prep` via `forvex_update_deal_disposition` and `forvex_log_activity`. When a deal eventually reaches `SOLD` or `LOST`, **`forvex_record_deal_outcome`** is recorded at that boundary (see `forvex-appointment-prep` step 7 / `forvex-deal-disposition` step 5b) — not here.
 
 ### 9. Follow-ups
 
@@ -236,7 +258,8 @@ When the user asks a follow-up ("what if rent is $200 lower"):
 
 - It does not move a deal through the lifecycle (status changes go through `forvex-appointment-prep` → `forvex_update_deal_disposition`).
 - It does not log activity notes / counters / walkaways (those go through `forvex-appointment-prep` → `forvex_log_activity`).
-- It does not write to any system without the franchisee explicitly asking — `forvex_save_deal` runs only after an explicit "save this" prompt, never on the skill's own initiative.
+- It does not write to any system without the franchisee explicitly asking — `forvex_save_deal` runs only after an explicit "save this" prompt, never on the skill's own initiative. `forvex_capture_deal_brief` (step 8.5) runs only in the same close-out after that explicit save succeeds; it does not promote adjustments — human approval at recontrol `/learning` does.
+- It does not record deal-close actuals — `forvex_record_deal_outcome` is owned by `forvex-deal-disposition` when a deal reaches `SOLD` / `LOST`.
 - It does not fetch comps or live market data from the web unless web search is enabled and the user asks.
 - It does not invent values. If something critical is missing after MCP calls, it asks.
 - Without MCP connected, it does not pull property, flood, rent, or comps automatically — user must supply inputs, and `forvex_save_deal` / `forvex_get_deal_history` are unavailable.

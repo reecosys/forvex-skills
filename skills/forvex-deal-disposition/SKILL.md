@@ -26,6 +26,7 @@ You move deals through the pipeline lifecycle on the user's behalf. Disposition 
 | Resolve property → deal_id | `forvex_resolve_property` + `forvex_list_deals` (see `references/resolve-context.md`) |
 | Read current state | `forvex_get_deal` |
 | Move status | `forvex_update_deal_disposition` |
+| Record close actuals | `forvex_record_deal_outcome` |
 | Verify | `forvex_get_deal_history` |
 
 If MCP is offline, announce and stop. Never claim a status moved when it didn't.
@@ -86,13 +87,41 @@ Call `forvex_get_deal_history({ deal_id })`. The most recent entry should be a `
 
 If verification fails or the new status doesn't match, flag the failure — don't claim success.
 
+### 5b. Record outcome actuals (terminal closes)
+
+When the transition lands on a **terminal close** (`SOLD`, or `LOST` when the deal died), call `forvex_record_deal_outcome` with the actuals the user provides. This is the ground truth the learning-calibration cron uses to confirm shadow adjustments — without it, captured corrections from underwriting never advance.
+
+**Map status → `outcome_kind`:**
+
+| New status | `outcome_kind` |
+|---|---|
+| `SOLD` | `SOLD` |
+| `LOST` | `DEAD` |
+
+Ask for what they know in one line: sale price, rehab spend, days on market, close date. Don't invent numbers — omit fields the user didn't give.
+
+```json
+{
+  "deal_id": "…",
+  "outcome_kind": "SOLD",
+  "actual_sale_price": 218000,
+  "actual_rehab_cost": 28500,
+  "days_on_market": 47,
+  "closed_at": "2026-06-15",
+  "source": "forvex-deal-disposition",
+  "idempotency_key": "<fresh-uuid>"
+}
+```
+
+`analysis_id` defaults to the deal's current analysis snapshot. Echo the actuals back before writing (same gate as disposition). If the user doesn't have numbers yet, note that learning calibration is blocked until they do — don't block the status move.
+
 ### 6. Suggest natural next steps (lightly)
 
 After certain transitions, gently nudge the next-most-likely workflow without auto-invoking:
 
 - → `UNDER_CONTRACT` → "Want to open or update the rehab estimate?" (hand to `forvex-rehab-estimator`)
 - → `INVENTORY` → "Ready to start the project? I can open it in REbuild."
-- → `SOLD` → "Want to run a post-mortem?" (hand to `forvex-postmortem`)
+- → `SOLD` → "Want to run a post-mortem?" (hand to `forvex-postmortem`) — outcome actuals should already be on file from step 5b
 - → `LOST` → "Capture the reason for the buy-box / lead-source learning?"
 
 These are **offers, not auto-runs**. One line each, then stop.

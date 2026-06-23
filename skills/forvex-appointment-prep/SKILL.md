@@ -39,7 +39,7 @@ If forVEX tools error or do not resolve, treat MCP as down for this session and 
 **Step 2b — Server-first data pull (MCP live).** Read `../forvex-underwriting/references/data-sources.md` for the canonical tool list. For appointment prep specifically, the priority calls are:
 
 - `forvex_get_property(address)` — resolve `property_id` and property fundamentals
-- `forvex_list_deals({ property_id })` and `forvex_get_deal(id)` — only when an existing deal record exists for this address
+- `forvex_list_deals({ property_id })` and `forvex_get_deal(id)` — only when an existing deal record exists for this address. When `forvex_get_deal` returns, read `readvise_property` (motivation, lead_source, lead_type, exit_strategy, financing) and `analysis.context` — these pre-fill seller context for step 3.
 - `forvex_underwrite(address, purchase_price?)` — canonical underwriting workflow; treat this as the source of truth for verdict, MAOs, pre-offer, confidence, and strategy comparison
 - `forvex_get_flood_data(address)` — flood zone status when you need explicit flood commentary
 - `forvex_get_market_intelligence(address)` — composite tract + neighborhood intel when you need supporting narrative. **Consume the `briefing` text directly.**
@@ -63,11 +63,16 @@ If forVEX tools error or do not resolve, treat MCP as down for this session and 
 
 ### 3. Gather seller context from the franchisee
 
-The data tells you about the property. The franchisee tells you about the *seller*. Ask in **one consolidated question** using Readvise's vocabulary so the answers map cleanly to deal records:
+The data tells you about the property. The franchisee tells you about the *seller*.
+
+**Read-before-ask:** If `forvex_get_deal` returned `readvise_property` or `analysis.context` with motivation / lead source / lead type already set, **do not re-ask** for those fields. Cite the existing values in the brief (e.g., "Seller motivation on file: Inherited"). Only ask for fields that are still missing.
+
+When gaps remain, ask in **one consolidated question** using Readvise's vocabulary so the answers map cleanly to deal records:
 
 > Before I write the brief, what do you know about the seller and how they came to you?
 >
 > - **Lead source**: web, advertising, or dig (self-generated)?
+> - **Lead type** (when source is dig/referral): mailers, paid, referral, organic, or other?
 > - **Motivation** (Readvise category): inherited, divorce, landlord burnout, relocation, downsizing, financial distress, or other?
 > - **Listing history**: how long on market (or off-market), any price drops, agent or FSBO?
 > - **Tone**: have you talked with them before? What was the conversation like?
@@ -113,9 +118,9 @@ When the franchisee comes back after the appointment, **route the update to the 
 | "Closed on it" / "we own it now" | `forvex_update_deal_disposition` → `INVENTORY` | Sequential forward. |
 | "Listed it" / "on the MLS" | `forvex_update_deal_disposition` → `LISTED` | Sequential forward. |
 | "Got a contract on the listing" | `forvex_update_deal_disposition` → `PENDING` | Sequential forward. |
-| "Closed the sale" / "we sold" | `forvex_update_deal_disposition` → `SOLD` | Sequential forward. Terminal status. |
+| "Closed the sale" / "we sold" | `forvex_update_deal_disposition` → `SOLD` **then** `forvex_record_deal_outcome` | Terminal status. Ask for actuals (sale price, rehab, DOM, close date) and record `outcome_kind: SOLD` — ground truth for the learning-calibration loop. See `forvex-deal-disposition` step 5b. |
 | "Walked away" / "no deal" / "passed" | `forvex_log_activity` (`activity_type: walkaway`) | **Default to logging, not LOST.** Status stays where it was; the brain dump goes into Readvise notes. |
-| "Lost the deal — take it off the board" / "remove from active" / "they sold to someone else" | `forvex_update_deal_disposition` → `LOST` | Use `LOST` only when the franchisee explicitly wants the deal removed from the active lifecycle. Allowed from any non-terminal status, no override. |
+| "Lost the deal — take it off the board" / "remove from active" / "they sold to someone else" | `forvex_update_deal_disposition` → `LOST` **then** `forvex_record_deal_outcome` | Use `LOST` only when the franchisee explicitly wants the deal removed from the active lifecycle. Record `outcome_kind: DEAD` with whatever actuals they have. See `forvex-deal-disposition` step 5b. |
 | "Drove by, vacant, left card" | `forvex_log_activity` (`drive_by` / `no_contact`) | Status untouched. |
 | "Talked to the seller — still negotiating" | `forvex_log_activity` (`call` / `contact_made`) | Status untouched; capture the substance in `notes`. |
 | "Counter at $X — rerun the ladder" | `forvex_log_activity` (`counter`) **then** re-invoke `forvex-underwriting` | The disposition doesn't change just because there's a counter; the conversation event does. After the rerun, if the franchisee says "save the new ladder", `forvex-underwriting` will `forvex_save_deal` again. |
@@ -129,7 +134,8 @@ When the franchisee comes back after the appointment, **route the update to the 
 - **`LOST` is opt-in, not a default.** "Walked away" ≠ "lost". Only use `LOST` when the user uses words like "lost", "killed it", "take it off the board", "remove from active".
 - **Always anchor by `deal_id`** when you have it. `forvex_log_activity` accepts `property_id` or `address` only as a fallback.
 - **Verify by re-read** after disposition changes — call `forvex_get_deal(deal_id)` and confirm `current_status` matches.
-- **`forvex-appointment-prep` does not call `forvex_save_deal`.** Underwriting analyses are owned by `forvex-underwriting`.
+- **`forvex-appointment-prep` does not call `forvex_save_deal`.** Underwriting analyses are owned by `forvex-underwriting`. When the franchisee transitions to underwriting or says "save," **pass gathered seller context forward** in the handoff (`seller_motivation`, `lead_source`, `lead_type`, `notes`) so `forvex-underwriting` can include it in `forvex_save_deal` `context`.
+- **Terminal closes feed the learning loop.** On `SOLD` or `LOST`, disposition alone is not enough — also call `forvex_record_deal_outcome` with actuals (or hand to `forvex-deal-disposition` if that skill is active). Without outcomes, corrections captured in underwriting step 8.5 never get confirmed.
 
 ## Probability of close — how to frame it
 
