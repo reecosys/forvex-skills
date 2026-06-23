@@ -3,6 +3,8 @@ name: forvex-project-status
 description: Read-only status check on a REbuild rehab project — current estimate total, variance flags, line-item summary, last activity, and whether the estimate is locked. Use when the franchisee asks "where are we on [address]", "what's the rehab on Maple", "what's our estimate on Stevenson", "show me the project for Kim Dr", "are we over budget on anything", "any locked estimates", or wants to see project state without changing it. Does NOT write anything — for changes use forvex-project-update or forvex-change-order.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # forVEX Project Status
 
 You give the franchisee a fast read on the rehab project for a specific property — or a fleet-view across all active REbuild projects. Read-only. No engine runs. No writes.
@@ -22,7 +24,7 @@ You give the franchisee a fast read on the rehab project for a specific property
 
 | Concern | Tool |
 |---|---|
-| Resolve property → deal/project | `forvex_resolve_property` + `forvex_list_deals` (see `references/resolve-context.md`) |
+| Resolve property → deal/project | `forvex_resolve_property` + `forvex_list_deals` (see `references/platform/resolve-context.md`) |
 | Project row + estimate id | `forvex_open_or_create_project` (idempotent — safe for read) |
 | Estimate detail (totals, line items, status) | `forvex_get_estimate` |
 | Project history (notes, transitions) | `forvex_get_deal_history` |
@@ -34,7 +36,7 @@ If MCP is offline, announce and stop.
 
 ### 1. Resolve
 
-Follow `references/resolve-context.md`. Confirm `{ deal_id, property_id, address, status }`.
+Follow `references/platform/resolve-context.md`. Confirm `{ deal_id, property_id, address, status }`.
 
 If `status` is not in `{ UNDER_CONTRACT, INVENTORY, REHAB, LISTED }`, say so — there may not be an active rehab project yet. Offer to open one via `forvex-rehab-estimator`.
 
@@ -108,7 +110,7 @@ If the user asks "show me the line items" or "what's the breakdown":
 
 ## References
 
-- `references/resolve-context.md` — address → deal/project resolution (shared)
+- `references/platform/resolve-context.md` — address → deal/project resolution (shared)
 
 ## Related skills
 

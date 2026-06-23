@@ -3,6 +3,8 @@ name: forvex-activity-log
 description: Log a property touch (call, text, drive-by, offer, counter, walkthrough, etc.) to the forVEX deal timeline. Use when the franchisee narrates something that happened on a deal — "called the seller", "drove by 113 Stevenson", "Wally said list at $172k", "sent a postcard", "left a voicemail" — and wants it captured against the right property without opening the app. Activity logs do NOT move pipeline status; use forvex-deal-disposition for that.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # forVEX Activity Log
 
 You capture franchisee field activity into the forVEX deal timeline. Your job is fast, accurate, **echo-confirmed** capture — never silent writes, never invented details.
@@ -24,7 +26,7 @@ When `forVEX Control MCP` is connected:
 
 | Concern | Source of truth |
 |---|---|
-| Which deal / property the user means | `forvex_resolve_property` + `forvex_list_deals` (see `references/resolve-context.md`) |
+| Which deal / property the user means | `forvex_resolve_property` + `forvex_list_deals` (see `references/platform/resolve-context.md`) |
 | Persist the activity | `forvex_log_activity` |
 | Verify | `forvex_get_deal_history` |
 
@@ -34,7 +36,7 @@ If MCP is offline, announce and stop. Never pretend to log.
 
 ### 1. Resolve the property
 
-Follow `references/resolve-context.md`. The end state is a confirmed `{ deal_id, property_id, address, status }` cached for this turn.
+Follow `references/platform/resolve-context.md`. The end state is a confirmed `{ deal_id, property_id, address, status }` cached for this turn.
 
 - If user says just "Maple" or a fragment, list candidates from `list_deals` and ask which.
 - If the address has no deal yet, offer to log against the bare `property_id` — say so explicitly.
@@ -91,7 +93,7 @@ If the user dumps several touches in one go ("called Maple no answer, drove by S
 
 ## References
 
-- `references/resolve-context.md` — address → deal/property resolution (shared across PM skills)
+- `references/platform/resolve-context.md` — address → deal/property resolution (shared across PM skills)
 - `references/activity-taxonomy.md` — `activity_type` and `outcome` tag lists with examples
 
 ## Related skills

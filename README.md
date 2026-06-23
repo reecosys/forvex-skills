@@ -30,18 +30,27 @@ MCP skills read and write your live deal pipeline via [control.forvex.app](https
 2. Visit [forvex.app/install](https://www.forvex.app/install) for the gated install page, or download `.skill` files directly from a release here.
 3. Upload each `.skill` to Claude.ai as above.
 
-The easiest path is the install page — it shows you which skills you've got, what version, and groups them by lane (REDEAL, REBUILD, READVISE).
+The easiest path is the install page — it shows you which skills you've got, what version, and groups them by lane (REDEAL, REBUILD, READVISE). Bundle membership is defined in `skills/SKILL_REGISTRY.json`.
 
 ## Layout
 
 ```
+platform/references/     # shared docs vendored into every .skill at package time
+  mcp-tools.md           # canonical MCP tool surface
+  resolve-context.md     # address → deal_id resolution
+  write-discipline.md    # echo-back, verify, idempotency
+  skill-routing.md       # who owns which write tool
+  forvex-frame.md        # HV framing (confidential)
+  comp-evaluation.md     # comps / ARV rules
+
 skills/
+  SKILL_REGISTRY.json    # lanes, tools, handoffs, bundles (lint-enforced)
   forvex-<name>/
-    SKILL.md           # required — frontmatter + workflow
-    tier.txt           # "demo" or "mcp"
-    references/        # optional supporting docs the skill loads on demand
-    scripts/           # optional helper code
-    templates/         # optional output templates
+    SKILL.md             # required — frontmatter + workflow
+    tier.txt             # "demo" or "mcp" (manifest only; not in zip)
+    references/          # skill-specific supporting docs
+    scripts/             # optional helper code
+    templates/           # optional output templates
 ```
 
 ## Building locally
@@ -49,26 +58,35 @@ skills/
 ```bash
 ./package.sh                   # builds every skill into build/*.skill
 ./package.sh forvex-mao        # builds one
+python3 scripts/lint-skills.py # registry + cross-ref checks
 ```
 
-`.skill` files are just zip archives renamed — Claude.ai's upload accepts the extension for one-click install.
+`.skill` files are zip archives. `package.sh` copies `platform/references/` into each skill as `references/platform/` so packaged skills never depend on `../other-skill/` paths.
+
+## Governance
+
+Cross-skill rules (identity, MCP topology, write discipline, routing) are defined in **`reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md`**. The machine-readable registry is **`skills/SKILL_REGISTRY.json`**. MCP tool names are validated against **`platform/mcp-tools.registry.json`** (sync from `recontrol` when tools change).
 
 ## Releases
 
-Tagging triggers an automated build:
+Tagging triggers lint, package, and manifest build:
 
 ```bash
-git tag v0.1.0
+git tag v0.3.0
 git push --tags
 ```
 
-The `release` workflow packages every skill, generates `manifest.json`, and attaches everything to a GitHub Release. forvex.app fetches `manifest.json` to render the install pages — no code change needed when a new skill ships.
+The `release` workflow packages every skill, generates `manifest.json` (with lanes, bundles, writes, handoffs), and attaches everything to a GitHub Release. forvex.app fetches `manifest.json` to render the install pages.
 
 ## Contributing
 
-Internal: open a PR. External: open an issue first describing the workflow you want a skill for.
+Internal: open a PR — CI runs `scripts/lint-skills.py` and script unit tests. External: open an issue first describing the workflow you want a skill for.
 
-When changing an existing skill, bump the next release tag and call out the change in the PR description.
+When changing an existing skill:
+
+1. Update `skills/SKILL_REGISTRY.json` if tools, lane, or handoffs change.
+2. Update `platform/mcp-tools.registry.json` if you add MCP tools (coordinate with recontrol).
+3. Bump the next release tag and call out the change in the PR description.
 
 ## License
 

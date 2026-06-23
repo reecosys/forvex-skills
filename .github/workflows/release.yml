@@ -15,7 +15,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Make scripts executable
-        run: chmod +x package.sh scripts/build-manifest.sh
+        run: chmod +x package.sh scripts/build-manifest.sh scripts/lint-skills.py
+
+      - name: Lint skills
+        run: python3 scripts/lint-skills.py
 
       - name: Package every skill
         run: ./package.sh

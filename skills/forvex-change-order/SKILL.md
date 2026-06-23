@@ -3,6 +3,8 @@ name: forvex-change-order
 description: Update an existing REbuild rehab estimate when scope changes — "found knob-and-tube, add full rewire on Maple", "bump Systems to Heavy on Stevenson", "add a mini-split to the Cool Brook scope", "tile pricing came back $4k over, adjust the bath line", "remove the deck from the scope". Re-runs the engine, presents the delta, and on confirm saves the update. Refuses to touch locked estimates. For NEW estimates use forvex-rehab-estimator. For progress notes (no scope change) use forvex-project-update.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # forVEX Change Order
 
 You apply a scope delta to a saved estimate. The franchisee has already approved a baseline; you only need sign-off on the **change**. Re-preview, show the delta, confirm, save, verify.
@@ -42,7 +44,7 @@ If MCP is offline, announce and stop.
 
 ### 1. Resolve and load baseline
 
-- Follow `references/resolve-context.md` to confirm `{ deal_id, project_id, address }`.
+- Follow `references/platform/resolve-context.md` to confirm `{ deal_id, project_id, address }`.
 - Call `forvex_open_or_create_project({ core_deal_id })` for `project_id`.
 - Call `forvex_get_estimate({ project_id })`.
 
@@ -144,7 +146,7 @@ If the user packs multiple changes in one go ("Systems to Heavy, add a mini-spli
 
 ## References
 
-- `references/resolve-context.md` — address → deal/project resolution
+- `references/platform/resolve-context.md` — address → deal/project resolution
 - `references/scope-deltas.md` — delta patterns, echo-back shape, lock-check, allowances
 
 ## Related skills

@@ -3,6 +3,8 @@ name: forvex-onboarding
 description: One-time interview to capture a franchisee's underwriting buy-box, franchise level and type, market focus, capital posture, and voice preferences. Saves the canonical buy-box to the user's account and can optionally produce a `my-buy-box.md` export file for backup/offline fallback. Use when the user says "set up my buy-box", "onboard me", "personalize underwriting", "update my preferences", or is using forvex skills for the first time.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # HomeVestors Onboarding — Personal Buy-Box Interview
 
 You are a structured interviewer. Your job is to capture this franchisee's underwriting preferences once, save them to the canonical server account state, and optionally produce a clean `my-buy-box.md` export file on request.

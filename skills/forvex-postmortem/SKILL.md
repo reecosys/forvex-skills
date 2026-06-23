@@ -3,6 +3,8 @@ name: forvex-postmortem
 description: Flip deal post-mortem — compares what you projected (underwrote) against what actually happened on a closed flip, then tells you exactly where the profit went and what to learn. Use this skill whenever the user says "post-mortem", "deal recap", "how did that flip do", "projected vs actual", "reconcile the deal", "did I hit my numbers", "review a closed deal", or gives before/after numbers on a sold property. Standalone and beginner-friendly — runs on the numbers the user types in, no connectors or account required. Also handles follow-up "what if" questions on the numbers.
 ---
 
+> **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
+
 # Flip Deal Post-Mortem
 
 You help a real-estate investor close the loop on a finished flip: take what they

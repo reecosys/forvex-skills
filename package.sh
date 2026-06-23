@@ -7,12 +7,14 @@
 #
 # Output: build/<skill-name>.skill
 #
-# Upload via Claude.ai → Settings → Capabilities → Skills → Upload.
+# Platform references from platform/references/ are vendored into each skill as
+# references/platform/ before zipping (fixes cross-skill ../ paths at runtime).
 
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 SKILLS_DIR="${REPO_DIR}/skills"
+PLATFORM_REFS_DIR="${REPO_DIR}/platform/references"
 BUILD_DIR="${REPO_DIR}/build"
 mkdir -p "${BUILD_DIR}"
 
@@ -26,14 +28,26 @@ package_one() {
     local skill="$1"
     local src="${SKILLS_DIR}/${skill}"
     local out="${BUILD_DIR}/${skill}.skill"
+    local staging
+    staging="$(mktemp -d)"
 
     if [[ ! -f "${src}/SKILL.md" ]]; then
         echo "✗ ${skill}: SKILL.md not found at ${src}/SKILL.md" >&2
+        rm -rf "${staging}"
         return 1
     fi
 
+    cp -R "${src}/" "${staging}/${skill}/"
+
+    if [[ -d "${PLATFORM_REFS_DIR}" ]]; then
+        mkdir -p "${staging}/${skill}/references/platform"
+        cp -R "${PLATFORM_REFS_DIR}/." "${staging}/${skill}/references/platform/"
+    fi
+
     rm -f "${out}"
-    (cd "${SKILLS_DIR}" && zip -qr "${out}" "${skill}" -x "*.DS_Store" -x "*/tier.txt")
+    (cd "${staging}" && zip -qr "${out}" "${skill}" -x "*.DS_Store" -x "*/tier.txt")
+    rm -rf "${staging}"
+
     local size
     size=$(du -h "${out}" | cut -f1)
     echo "✓ ${out} (${size})"
