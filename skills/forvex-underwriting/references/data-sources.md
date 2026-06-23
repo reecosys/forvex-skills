@@ -4,7 +4,7 @@
 
 When the **forVEX Control MCP** is connected, pull data from it before asking the user. Server: `https://control.forvex.app/api/mcp` (OAuth — configure once in Claude → Connectors).
 
-> **Status (MCP 0.2.0):** Phase 1 read tools and Phase 4 write tools are **live**. **16 tools** registered after OAuth connect (all prefixed `forvex_*`). Server version **0.2.0** — disconnect/reconnect the forVEX Control connector if tool names look stale. Every tool declares `outputSchema`; `forvex_get_comps` / `forvex_get_comp_detail` may include optional top-level `subject` and `search_params`. Market flip/rent scores may return `null` while tract resolution works — use MoM/YoY when scores are missing and default `market_risk` to 0.5. Auth failures read: *"Missing or invalid auth context. Re-authorize via /api/oauth/authorize (or refresh your Supabase session) and retry."*
+> **Status (MCP 0.3.0):** Phase 1 read tools, Phase 4 write tools, and the learning-layer capture tools are **live**. Disconnect/reconnect the forVEX Control connector if tool names look stale. Every tool declares `outputSchema`; `forvex_get_comps` / `forvex_get_comp_detail` may include optional top-level `subject` and `search_params`. Market flip/rent scores may return `null` while tract resolution works — use MoM/YoY when scores are missing and default `market_risk` to 0.5. Auth failures read: *"Missing or invalid auth context. Re-authorize via /api/oauth/authorize (or refresh your Supabase session) and retry."*
 
 ---
 
@@ -36,6 +36,8 @@ When MCP is connected, server state is authoritative. `my-buy-box.md` is only an
 | `forvex_update_deal_disposition` | **4.2 (new)** | Move a deal through the canonical lifecycle (`LEAD|OFFER|UNDER_CONTRACT|INVENTORY|REHAB|LISTED|PENDING|SOLD|LOST`). |
 | `forvex_log_activity` | **4.3 (new)** | Append a Readvise property note + timeline event. Use for counters, calls, drive-bys, walkaway notes — anything that does not change status. |
 | `forvex_get_deal_history` | **4 (new)** | Chronological merge of analyses, lifecycle transitions, and Readvise notes for a deal. |
+| `forvex_capture_deal_brief` | **learning** | End-of-session retrospective: narrative brief + triaged corrections → shadow/candidate learned adjustments. |
+| `forvex_record_deal_outcome` | **learning** | Ground-truth actuals at deal close (sale price, rehab, DOM) keyed to the analysis snapshot. |
 | `forvex_attach_analysis` | 2 | Attach analysis blob to a deal (planning — not used in active skill flows) |
 
 ---
@@ -395,6 +397,97 @@ Sorted oldest → newest.
 
 - Session kickoff in `forvex-underwriting` step 1 when the franchisee picks "pick up where I left off" — gives the skill a one-call view of everything that's happened.
 - After `forvex_update_deal_disposition` / `forvex_log_activity` from `forvex-appointment-prep` if the franchisee asks "what's been logged so far?".
+
+---
+
+### `forvex_capture_deal_brief(payload)` — learning-layer write
+
+End-of-underwriting-session retrospective. Persists a narrative brief plus per-correction learned signals, triaged server-side. This is the capture front-end of the self-learning loop — authoring is skill-side; recontrol owns schema, triage, and write path.
+
+**Payload:**
+
+```json
+{
+  "deal_id": "…",
+  "analysis_id": "…",
+  "decisions": ["Offered $150k; seller likely counters ~$140k"],
+  "open_questions": ["Confirm roof age on site"],
+  "next_steps": ["Send offer", "Order inspection"],
+  "outcome_unknown": true,
+  "corrections": [
+    {
+      "field": "beds",
+      "observed": 2,
+      "engine_value": 1,
+      "triage_class": "DATA_BUG",
+      "rationale": "public record shows 1, MLS + seller confirm 2"
+    },
+    {
+      "field": "rehab",
+      "observed": 31000,
+      "engine_value": 25000,
+      "triage_class": "CALIBRATION",
+      "rationale": "engine under-scopes heavy rehab in this tract",
+      "suggested_adjustment": {
+        "target_field": "rehab",
+        "op": "scale",
+        "value": 1.2,
+        "scope": "market",
+        "scope_ref": "<tract_id>"
+      }
+    }
+  ]
+}
+```
+
+**Triage (per `corrections[]` item):**
+
+| Class | Meaning | Adjustment? |
+|---|---|---|
+| `DATA_BUG` | Engine/pipeline had wrong input (bad comp, wrong beds, stale sale) | **Never.** Returned in `data_bugs[]` — surface to operator as upstream fix items. |
+| `CALIBRATION` | Engine assumption systematically off | Optional `suggested_adjustment` → **shadow** adjustment (held until outcomes confirm). |
+| `PREFERENCE` | Operator/buy-box fit, not correctness | Optional `suggested_adjustment` → **candidate** adjustment. |
+
+**`suggested_adjustment`** (CALIBRATION/PREFERENCE only):
+
+`{ target_field, op: 'scale'|'delta'|'set', value, scope?: 'deal'|'market'|'franchisee'|'global', scope_ref?, promotion_target?: 'runtime'|'source' }`
+
+- `runtime` (default) — nudges an **injectable engine input**: `rehab`, `market_risk`, `hm_rate`, `hm_points`, `lender_ltv_cap`, `rent`.
+- `source` — targets an engine-internal/skill knob that can't be injected (e.g. wholetail %, rehab/sqft tiers, verdict thresholds) → surfaces as a **tool-improvement proposal** at recontrol `/learning`, not a runtime nudge.
+
+**When to call:** `forvex-underwriting` step 8.5 — in the same close-out after a successful `forvex_save_deal` the franchisee explicitly requested. Only capture real overrides/judgments from the run; do not invent corrections. Captured adjustments are inert until a super admin approves at `/learning`.
+
+---
+
+### `forvex_record_deal_outcome(payload)` — learning-layer write
+
+Ground-truth actuals when a deal closes. Writes to `core.deal_outcomes` keyed to the **specific analysis snapshot** (`core.deal_analyses.id`) that produced the prediction. The `learning-calibration` cron uses this to advance shadow → candidate adjustments.
+
+**Payload:**
+
+```json
+{
+  "deal_id": "…",
+  "analysis_id": "…",
+  "outcome_kind": "SOLD",
+  "actual_sale_price": 218000,
+  "actual_rehab_cost": 28500,
+  "actual_purchase_price": 165000,
+  "days_on_market": 47,
+  "actual_exit_strategy": "retail_flip",
+  "closed_at": "2026-06-15T00:00:00Z",
+  "notes": "Appraisal came in $3k under list; closed anyway.",
+  "idempotency_key": "<fresh-uuid>"
+}
+```
+
+**`outcome_kind`:** `SOLD` | `RENTED` | `WHOLESALED` | `DEAD` | `APPRAISAL`
+
+- `analysis_id` defaults to the deal's `current_analysis_id` when omitted.
+- Server returns `arv_error_pct` / `rehab_error_pct` against the snapshot's predicted values.
+- Idempotent when `idempotency_key` (UUID) is supplied.
+
+**When to call:** `forvex-deal-disposition` when a deal reaches a terminal close (`SOLD`, `LOST` → `DEAD`, etc.). Without outcomes, nothing in the learning loop gets confirmed.
 
 ---
 
