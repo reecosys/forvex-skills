@@ -1,5 +1,5 @@
 {
-  "mcp_min_version": "0.3.0",
+  "mcp_min_version": "0.4.0",
   "contract": "reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md",
   "bundles": {
     "demo": {
@@ -29,8 +29,12 @@
       ]
     },
     "readvise": {
-      "label": "Readvise — capture",
-      "skills": ["readvise-capture"]
+      "label": "Readvise — capture & reflect",
+      "skills": ["readvise-capture", "weekly-accountability"]
+    },
+    "cowork": {
+      "label": "Cowork — operating lanes",
+      "skills": ["cmo-lane"]
     }
   },
   "skills": {
@@ -207,6 +211,22 @@
       "reads": ["readvise_resolve_property", "readvise_get_today_summary"],
       "handoffs": [],
       "platform_refs": ["write-discipline", "skill-routing"]
+    },
+    "weekly-accountability": {
+      "lane": "readvise",
+      "tier": "mcp",
+      "writes": ["readvise_create_accountability_debrief"],
+      "reads": ["readvise_get_prior_context"],
+      "handoffs": ["readvise-capture"],
+      "platform_refs": ["write-discipline", "skill-routing"]
+    },
+    "cmo-lane": {
+      "lane": "cowork",
+      "tier": "mcp",
+      "writes": ["forvex_emit_event"],
+      "reads": ["forvex_get_property"],
+      "handoffs": [],
+      "platform_refs": ["resolve-context", "write-discipline", "skill-routing"]
     }
   }
 }
