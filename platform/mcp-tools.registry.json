@@ -1,5 +1,5 @@
 {
-  "mcp_schema_version": "0.3.0",
+  "mcp_schema_version": "0.4.0",
   "source": "recontrol/lib/mcp/tools/registry.ts",
   "tools": [
     "forvex_whoami",
@@ -39,6 +39,9 @@
     "readvise_create_task",
     "readvise_append_pulse_today",
     "readvise_create_advisor_action",
-    "readvise_get_today_summary"
+    "readvise_get_today_summary",
+    "readvise_get_prior_context",
+    "readvise_create_accountability_debrief",
+    "forvex_emit_event"
   ]
 }
