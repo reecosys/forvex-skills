@@ -66,6 +66,9 @@ DEFAULTS = {
     "wholetail_base_pct": 0.85,
     "wholetail_uplift": 0.04,
     "wholesale_sale_pct": 0.80,
+    # Pure-assignment: disciplined end-buyer pays this % of ARV minus FULL repairs. A buy-box
+    # preference (fallback 0.80), distinct from the 0.65 flip entry.
+    "wholesale_entry_pct": 0.80,
 
     # Capital posture rates
     "company_rate": 0.08,
@@ -325,56 +328,73 @@ def title_fee(purchase: float, multiplier: float = 1.0) -> float:
 # ---------- Strategy: Assignment ----------
 
 def calc_assignment(inputs: dict) -> dict:
-    """Assignment — contract assigned to investor; assignor never closes.
+    """Pure assignment — contract assigned to an investor; assignor never closes.
 
-    Distinct from wholesale because capital and holding profiles are
-    different. The assignor risks earnest money + their marketing costs only.
+    No rehab, no double close, no hidden buffer. The disciplined end-buyer pays
+    ``wholesale_entry_pct`` of ARV minus the FULL repairs. My fee is the spread
+    between that price and what I tie the seller up at; my MAO is the highest
+    offer that still clears my minimum fee. One lever each (entry % and min fee),
+    so the number is transparent and there's no double-counted buffer.
 
-    Assignment fee is bounded by the wholesale spread: an investor will only
-    pay a fee that leaves them their own profit. We estimate the rough
-    wholesale net and cap the fee so the investor keeps at least
-    `investor_buffer` (default $10k).
+    Parity contract: mirrors recontrol nativeEngine.ts::calcAssignment exactly.
     """
-    purchase = inputs.get("purchase", 0)
+    offer = inputs.get("purchase", 0)  # my contract price with the seller
     arv = inputs.get("arv", 0)
     full_rehab = inputs.get("rehab", 0)
-    target_fee = inputs.get("assignment_fee", DEFAULTS["assignment_fee_default"])
     earnest = inputs.get("earnest_money", DEFAULTS["assignment_earnest_money"])
     marketing = inputs.get("assignment_marketing", DEFAULTS["assignment_marketing"])
-    investor_buffer = inputs.get("assignment_investor_buffer", 10000)
+    # Buy-box prefs: the disciplined end-buyer's entry % and my minimum assignment fee.
+    wholesale_entry_pct = inputs.get("wholesale_entry_pct", DEFAULTS["wholesale_entry_pct"])  # 0.80
+    min_fee = inputs.get(
+        "min_assignment_fee",
+        inputs.get("assignment_fee", DEFAULTS["assignment_fee_default"]),
+    )  # 15000
 
-    # Rough wholesale net (what the investor expects to capture if THEY took
-    # the deal directly). The assignment fee can't exceed this minus the
-    # investor's expected profit.
-    wholesale_predicted = DEFAULTS["wholesale_sale_pct"] * max(0, arv - full_rehab)
-    investor_costs = purchase * 1.02  # purchase + ~2% closing/holding approximation
-    rough_wholesale_net = wholesale_predicted - investor_costs
-    max_feasible_fee = max(0, rough_wholesale_net - investor_buffer)
+    investor_price = max(0, wholesale_entry_pct * arv - full_rehab)
+    assignment_fee = investor_price - offer
+    mao = investor_price - min_fee
 
-    effective_fee = min(target_fee, max_feasible_fee)
-    spread_limited = effective_fee < target_fee
-
+    spread_limited = assignment_fee < min_fee  # fee doesn't clear my floor
     cost_basis = earnest + marketing
-    net_profit = effective_fee - marketing
+    net_profit = assignment_fee - marketing
     roi = (net_profit / cost_basis) * 100 if cost_basis > 0 else 0
 
     warnings = []
     if net_profit < 0:
         warnings.append({"id": "negative_profit", "label": "Negative Profit"})
-    if effective_fee < 5000:
+    if 0 < assignment_fee < 5000:
         warnings.append({"id": "thin_assignment", "label": "Thin Assignment Fee"})
     if spread_limited:
-        warnings.append({"id": "spread_limited", "label": "Spread Limits Fee"})
+        warnings.append({"id": "spread_limited", "label": "Below Min Fee"})
+
+    # Marketplace Triage (Stage 1) net-spread economics. Inputs default to 0 when absent, so
+    # net_spread == assignment_fee for every existing (non-marketplace) caller — fully additive.
+    source_split = inputs.get("source_split", 0)
+    dispo_cost = inputs.get("dispo_cost", 0)
+    transactional_funding = inputs.get("transactional_funding", 0)
+    net_spread = assignment_fee - source_split - dispo_cost - transactional_funding
+    # Surface a thin/negative net spread WITHOUT entering the scored `warnings` array — this slice
+    # only describes the economics; it must not move deal_score, verdict, or buy-box fit.
+    net_spread_warnings = []
+    if net_spread <= 0:
+        net_spread_warnings.append({"id": "negative_net_spread", "label": "Negative Net Spread"})
+    elif net_spread < 5000:
+        net_spread_warnings.append({"id": "thin_spread", "label": "Thin Net Spread"})
 
     return {
         "strategy": "assignment",
-        "assignment_fee": effective_fee,
-        "target_fee": target_fee,
-        "max_feasible_fee": round(max_feasible_fee, 2),
+        "assignment_fee": round(assignment_fee, 2),
+        # The disciplined end-buyer price the fee/MAO hang off of, and the max offer at the fee floor.
+        "investor_price": round(investor_price, 2),
+        "mao": round(mao, 2),
+        "wholesale_entry_pct": wholesale_entry_pct,
+        "min_fee": min_fee,
+        "target_fee": min_fee,
+        "max_feasible_fee": round(assignment_fee, 2),  # simple model: the spread at this offer, no buffer cap
         "spread_limited": spread_limited,
         "earnest_money": earnest,
         "marketing": marketing,
-        "predicted_sale": effective_fee,
+        "predicted_sale": round(investor_price, 2),
         "rehab_used": 0,
         "rehab_ref": full_rehab,
         "holding_months": 0,
@@ -385,11 +405,17 @@ def calc_assignment(inputs: dict) -> dict:
         "sale_fees": {"franchise_fee": 0, "franchise_fee_pct": 0, "other": 0,
                       "marketing": marketing, "total": marketing},
         "total_cost_basis": cost_basis,
-        "net_profit": net_profit,
+        "net_profit": round(net_profit, 2),
         "roi": min(roi, 9999),
-        "margin": 1.0 if effective_fee > 0 else 0,
+        "margin": 1.0 if assignment_fee > 0 else 0,
         "rehab_ratio": 0,
         "warnings": warnings,
+        # Marketplace Triage Stage 1 — net-spread economics. Self-describing: echo inputs + result.
+        "net_spread": round(net_spread, 2),
+        "source_split": source_split,
+        "dispo_cost": dispo_cost,
+        "transactional_funding": transactional_funding,
+        "net_spread_warnings": net_spread_warnings,
     }
 
 
