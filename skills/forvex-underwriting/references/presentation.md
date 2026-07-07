@@ -22,8 +22,9 @@ How to render the output. The template lives in `templates/deal-one-pager.md`. T
 5. **Recommended strategy** — One paragraph plus a compact cost breakdown
 6. **Other strategies** — Each in a `<details>` block, collapsed
 7. **Risk + guardrails** — Risk score, label, any flags
-8. **MAO / sensitivity** — Compact "if you'd accept X, max offer is Y" line(s)
-9. **Suggested follow-ups** — 3 prompts the user can tap-paste
+8. **State nuances** — Governed per-state caveats (only when out-of-area / caveats present)
+9. **MAO / sensitivity** — Compact "if you'd accept X, max offer is Y" line(s)
+10. **Suggested follow-ups** — 3 prompts the user can tap-paste
 
 ---
 
@@ -230,6 +231,32 @@ One `<details>` block per non-recommended strategy. Summary line: `<strategy> �
 - Use ⚠️ only if user hasn't opted out of emoji.
 
 If no flags: write `No risk flags raised.`
+
+---
+
+## State nuances
+
+The engine's `server_context.state_rules` carries a **governed** per-state operational brief from the canonical `core.state_rules` table (severity, closing authority, disclosure regime, deed convention, license, assignment/double-close posture) plus a ready-to-render `caveats[]` array.
+
+**This is the source of truth for state law. Do NOT freelance state-specific commentary** (special-warranty deed conventions, non-disclosure comp posture, attorney-close requirements, licensing) from your own knowledge — render the governed `caveats` instead. If `state_rules` is absent (MCP down, or no state resolved), say so plainly rather than inventing it.
+
+**When to show this section:**
+- The subject is **out-of-area** (not the franchisee's home market), OR
+- `state_rules.caveats` is non-empty.
+
+Skip it silently for in-market deals with no caveats (don't add noise to a routine local underwrite).
+
+```
+**State nuances — TX** (severity: GREEN)
+
+- Non-disclosure state — public sale prices are unreliable; lean on MLS-sold / ChatARV / BPO for ARV and treat comp confidence as reduced.
+- Special Warranty is a standard arm's-length resale deed here — SW comps are kept, not treated as distress.
+```
+
+- Header: `**State nuances — {state}**` with the `severity` in parentheses when present.
+- List each string in `caveats[]` verbatim as a bullet — they are already plain-language and franchisee-facing.
+- For **attorney-close** states, the caveat already flags the fee/timeline; when the recommended path is assignment, echo it once in the MAO line too ("attorney-close adds fee + days").
+- Keep it tight — bullets only, no paragraph.
 
 ---
 
