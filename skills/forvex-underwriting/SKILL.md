@@ -74,6 +74,7 @@ For normal connected runs, prefer the composite underwriting workflow first. Def
 - `forvex_get_comps(address)` only when the user wants to inspect the comp verdict directly
 - `forvex_get_comps_expanded(address)` only when the user explicitly asks for a broader comp search
 - `forvex_get_rent_estimate(address)` only if the user did not supply rent and rental/BRRRR remains in scope
+- `forvex_get_chatarv_comps({ property_id })` — external ARV cross-check. **Read-cached by default (no credit spend).** Call it to surface the latest ChatARV report next to the internal ARV when it matters: **out-of-area / non-disclosure-state deals** (where `server_context.state_rules.caveats` flags reduced comp confidence), a **thin or NO-CALL** internal comp verdict, or when the user asks. Pass `refresh: true` **only** when there is no cached report for a case that needs the cross-check, or the user explicitly asks for a fresh pull — a refresh **spends a ChatARV credit and takes 25–100s**, so say so when you do it. Never refresh just because a cached report is a few days old.
 
 **If `forvex_whoami` errors or no forVEX tools resolve, announce it at the top of the output:**
 
@@ -125,6 +126,8 @@ Common defaults to remember:
 Treat `forvex_underwrite` as the authoritative execution path when MCP is available. It now resolves property, comps, market context, latest saved deal defaults, and buy-box server-side before running the deterministic engine. Only fall back to `scripts/underwrite.py` when MCP underwriting is unavailable.
 
 Do not do arithmetic in your head. If no execution path is available, say so explicitly and mark the output `[CALCULATED MANUALLY — verify]`.
+
+**ChatARV is a cross-check, not a second ARV producer.** The internal engine ARV (from `forvex_get_comps` / `forvex_underwrite`) is the source of truth — the engine already falls back to ChatARV automatically when its own sources NO-CALL. When you pulled `forvex_get_chatarv_comps`, compare the ChatARV number to the internal ARV and **report the divergence** (e.g. "ChatARV $183k vs internal $172k — +6%"), especially in non-disclosure states where public-record comps are weak. Do **not** silently swap ChatARV in over a valid internal ARV, and do not average the two into a new number.
 
 ### 5. Score, badge, and flag
 
