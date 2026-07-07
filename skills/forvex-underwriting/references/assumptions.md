@@ -325,6 +325,6 @@ All 10 fixtures must pass. When the math intentionally changes, bump `__version_
 ## TODOs
 
 - **Leveraged ROI** — current ROI uses total cost basis (faithful to redeal). When financed, this understates true cash-on-cash return. Future work: surface both "raw ROI" (current) and "leveraged ROI" (net profit / cash actually deployed) for flips, especially under hard money.
-- **State-specific overrides as data** — currently documented in prose; ideally a lookup table the script reads.
-- **Per-state attorney fees** — TX uses title companies (no attorney), NY/NJ/IL require attorneys ($1,500+).
+- **State-specific overrides as data** — ✅ now governed: `server_context.state_rules` (from canonical `core.state_rules`) carries closing authority, disclosure regime, deed convention, and legality. Render those `caveats` in the one-pager's **State nuances** section; do not freelance state law from prose. The flat `attorney` fee below is a *cost* default only — whether an attorney close applies is read from `state_rules.closing_authority`, not this list.
+- **Per-state attorney fees** — the closing-cost engine uses a flat `attorney` default; whether it applies (and any fee/timeline caveat) is governed by `state_rules.closing_authority` (attorney / attorney_customary / attorney_partial / title). Not a prose lookup.
 - **Multi-period IRR** — `annualized_roi` is a flat extrapolation; true IRR for BRRRR (which has cashflows in periods 0, 6, and ongoing) would be more accurate.

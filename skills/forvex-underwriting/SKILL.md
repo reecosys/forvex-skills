@@ -141,8 +141,9 @@ Use the template in `templates/deal-one-pager.md`. Structure:
 5. **Recommended strategy** — one paragraph explaining the pick and why
 6. **Cost breakdown** — for the recommended strategy only (use `<details>` for the others to keep it scannable on mobile)
 7. **Risk + guardrails** — risk score, label, any flags triggered
-8. **MAO / sensitivity** — one-line "If you'd accept X% margin, max offer is $Y"
-9. **Suggested follow-ups** — 3 prompts the user can copy-paste to drill in
+8. **State nuances** — render `server_context.state_rules.caveats` (governed, from canonical `core.state_rules`) when out-of-area or any caveat is present. **Do not freelance state law** — deed conventions, non-disclosure comp posture, attorney-close, licensing all come from this brief, not your own knowledge. See `references/presentation.md`.
+9. **MAO / sensitivity** — one-line "If you'd accept X% margin, max offer is $Y"
+10. **Suggested follow-ups** — 3 prompts the user can copy-paste to drill in
 
 ### 7. HomeVestors framing
 
