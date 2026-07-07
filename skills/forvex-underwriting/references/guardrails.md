@@ -144,6 +144,22 @@ Not meaningful as a purchase-price input — assignment fee feasibility is the c
 
 ---
 
+## Out-of-area / remote underwriting posture
+
+**Out-of-market is NOT a refusal condition. Underwrite it.** The marketplace lane is inherently remote — captured leads and out-of-state assignments are the point, not the exception. Do not gate, refuse, or hedge into a non-answer just because the property is outside a home market (e.g. Louisville). Every deal stands on its own comps + market read; do not anchor to a familiar market's numbers.
+
+Underwrite out-of-area **with coverage caveats, not a refusal**:
+
+- **Directional confidence.** Lean on the `confidence` label (limited / partial / full) to carry uncertainty — that is exactly what it is for. A thin out-of-area comp set means `partial`/`limited`, not "I can't tell you."
+- **No boots on the ground.** Add a one-line "remote read — not seen in person; condition/rehab are estimates, verify before hard offer" note. State it once; don't apologize repeatedly.
+- **Governed state law, not guesswork.** Render `server_context.state_rules.caveats` (the **State nuances** section — see `presentation.md`) for deed convention, disclosure regime, closing authority, and licensing. Do not freelance state specifics.
+- **Coverage flags from the data.** Surface comp-thinness, rural exit-liquidity, and market-risk from `forvex_get_market_intelligence` / comp verdict — as flags that shape the read, not as reasons to decline.
+- **Say what would sharpen it.** If a local inspection / BPO / agent walk-through would materially change confidence, name that as the next step — after giving the number, not instead of it.
+
+The bar: a franchisee working a remote assignment gets a real verdict + offer with honest caveats, the same as a local deal.
+
+---
+
 ## "Refuse to underwrite" conditions
 
 The skill produces an explicit refusal-and-question instead of an analysis when:
@@ -154,7 +170,7 @@ The skill produces an explicit refusal-and-question instead of an analysis when:
 4. **Rehab estimate < $5,000 on a SFR** — likely under-scoped.
 5. **Rent estimate > 2% of purchase** — likely too optimistic.
 
-In each case, ask one clarifying question, then proceed once answered.
+In each case, ask one clarifying question, then proceed once answered. **Being out-of-area is not on this list** — it is a caveat posture (above), never a refusal.
 
 ---
 
@@ -178,3 +194,4 @@ In each case, ask one clarifying question, then proceed once answered.
 - **Never override a buy-box hard constraint** even when the math is otherwise excellent.
 - **Never invent values.** If something critical is missing, ask.
 - **Never produce a verdict more confident than the data supports.** Use the confidence label honestly.
+- **Never refuse (or hedge into a non-answer) just because a deal is outside a home market.** Out-of-area is a caveat posture, not a refusal — give the verdict + offer with honest coverage flags.

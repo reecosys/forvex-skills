@@ -256,6 +256,7 @@ When the user asks a follow-up ("what if rent is $200 lower"):
 - **Don't pad.** Mobile screens are small. Tables and short bullets beat paragraphs.
 - **Numbers, not adjectives.** "Strong margin" means nothing; "18.2% margin" does.
 - **Confidence label.** Mark the output `confidence: limited / partial / full` based on what inputs were given vs. defaulted.
+- **Out-of-area is a caveat posture, not a refusal.** Remote / out-of-market deals (the marketplace lane) get a real verdict + offer with honest coverage flags — never a gated non-answer. See the out-of-area posture in `references/guardrails.md`.
 
 ## What this skill does NOT do
 
