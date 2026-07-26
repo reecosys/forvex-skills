@@ -91,7 +91,7 @@ Demo bundles are hosted on **forvex.app**, not GitHub Releases. Serving public d
 ./scripts/publish-demo-bundles.sh --dest ../reecosystem-web/public/skills
 ```
 
-Builds `build/public-skills/` — the five demo `.skill` files plus a `manifest.json` whose **demo** `download_url`s point at `https://www.forvex.app/skills/<id>.skill`. Run it after tagging a release; commit the result in the site repo. Total payload is ~88K.
+Builds `build/public-skills/` — the five demo `.skill` files plus a `manifest.json` whose **demo** `download_url`s point at `https://forvex.app/skills/<id>.skill`. Run it after tagging a release; commit the result in the site repo. Total payload is ~88K.
 
 The script runs `lint-skills.py` and `package.sh` first, so the visibility gates apply, then re-verifies the built zips carry no internal refs before writing the payload. It fails rather than publishing a leak.
 
