@@ -83,6 +83,20 @@ Three rules are enforced by `scripts/lint-skills.py` **and** by `package.sh`, so
 
 When adding a platform ref, classify it in the same commit. When a demo skill needs routing guidance, point it at `skill-routing-public.md` — never at `skill-routing.md`, which names MCP write tools.
 
+## Publishing the demo skills to forvex.app
+
+Demo bundles are hosted on **forvex.app**, not GitHub Releases. Serving public downloads from a release ties them to repo visibility — making this repo private 404s every public URL, including the `manifest.json` the install page renders from. The site owning its own assets cuts that dependency.
+
+```bash
+./scripts/publish-demo-bundles.sh --dest ../reecosystem-web/public/skills
+```
+
+Builds `build/public-skills/` — the five demo `.skill` files plus a `manifest.json` whose **demo** `download_url`s point at `https://www.forvex.app/skills/<id>.skill`. Run it after tagging a release; commit the result in the site repo. Total payload is ~88K.
+
+The script runs `lint-skills.py` and `package.sh` first, so the visibility gates apply, then re-verifies the built zips carry no internal refs before writing the payload. It fails rather than publishing a leak.
+
+MCP entries in that manifest still point at GitHub Releases, so the gated install page keeps working unchanged. **If this repo is ever made private, those URLs stop resolving for everyone** — MCP distribution then needs its own answer, which this script deliberately does not decide.
+
 ## Governance
 
 Cross-skill rules (identity, MCP topology, write discipline, routing) are defined in **`reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md`**. The machine-readable registry is **`skills/SKILL_REGISTRY.json`**. MCP tool names are validated against **`platform/mcp-tools.registry.json`** (sync from `recontrol` when tools change).
