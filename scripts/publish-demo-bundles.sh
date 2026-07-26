@@ -16,7 +16,7 @@
 # Usage:
 #   ./scripts/publish-demo-bundles.sh
 #   ./scripts/publish-demo-bundles.sh --version v0.3.0
-#   ./scripts/publish-demo-bundles.sh --base-url https://www.forvex.app/skills
+#   ./scripts/publish-demo-bundles.sh --base-url https://forvex.app/skills
 #   ./scripts/publish-demo-bundles.sh --dest ../reecosystem-web/public/skills
 #
 # NOTE ON MCP ENTRIES: they still point at GitHub Releases, so the gated
@@ -31,7 +31,7 @@ BUILD_DIR="${REPO_DIR}/build"
 OUT_DIR="${BUILD_DIR}/public-skills"
 REGISTRY="${REPO_DIR}/skills/SKILL_REGISTRY.json"
 
-BASE_URL="https://www.forvex.app/skills"
+BASE_URL="https://forvex.app/skills"
 VERSION=""
 DEST=""
 
