@@ -36,6 +36,7 @@ Use this when a user action could map to multiple skills. **Hand off** — do no
 | User intent | Skill | Key writes |
 |---|---|---|
 | Notes, tasks, pulse, advisor lane | `readvise-capture` | `readvise_*` |
+| Weekly accountability check-in | `weekly-accountability` | `readvise_create_accountability_debrief` |
 
 ## Demo (no MCP)
 
@@ -45,6 +46,7 @@ Use this when a user action could map to multiple skills. **Hand off** — do no
 | Light rehab ballpark | `forvex-rehab-light` |
 | Finish package | `forvex-finish` |
 | Closed-deal math recap | `forvex-postmortem` |
+| Weekly accountability, no account | `accountability-partner` — superseded by `weekly-accountability` when the Control MCP is connected |
 
 ## Learning loop (cross-cutting)
 
