@@ -10,7 +10,7 @@ A small markdown bundle that teaches Claude a domain-specific workflow. Once ins
 
 | Tier | Account needed? | Examples |
 |---|---|---|
-| **Demo** | No — runs on what you type | `forvex-mao`, `forvex-rehab-light`, `forvex-finish`, `forvex-postmortem` |
+| **Demo** | No — runs on what you type | `forvex-mao`, `forvex-rehab-light`, `forvex-finish`, `forvex-postmortem`, `accountability-partner` |
 | **MCP-connected** | Yes — forVEX account + Control MCP OAuth | `forvex-rehab-estimator`, `forvex-underwriting`, the pipeline + project skills |
 
 Demo skills are great for first-touch — try them without signing up.
@@ -35,13 +35,14 @@ The easiest path is the install page — it shows you which skills you've got, w
 ## Layout
 
 ```
-platform/references/     # shared docs vendored into every .skill at package time
-  mcp-tools.md           # canonical MCP tool surface
-  resolve-context.md     # address → deal_id resolution
-  write-discipline.md    # echo-back, verify, idempotency
-  skill-routing.md       # who owns which write tool
-  forvex-frame.md        # HV framing (confidential)
-  comp-evaluation.md     # comps / ARV rules
+platform/references/       # shared docs; each skill gets exactly the ones it declares
+  skill-routing-public.md  # public — routing across the standalone skills
+  write-discipline.md      # public — echo-back, verify, idempotency
+  skill-routing.md         # internal — who owns which write tool
+  resolve-context.md       # internal — address → deal_id resolution
+  mcp-tools.md             # internal — canonical MCP tool surface
+  comp-evaluation.md       # internal — comps / ARV rules
+  forvex-frame.md          # internal — HV framing (confidential)
 
 skills/
   SKILL_REGISTRY.json    # lanes, tools, handoffs, bundles (lint-enforced)
@@ -61,7 +62,26 @@ skills/
 python3 scripts/lint-skills.py # registry + cross-ref checks
 ```
 
-`.skill` files are zip archives. `package.sh` copies `platform/references/` into each skill as `references/platform/` so packaged skills never depend on `../other-skill/` paths.
+`.skill` files are zip archives. `package.sh` copies platform references into each skill as `references/platform/` so packaged skills never depend on `../other-skill/` paths.
+
+### Platform ref visibility — demo vs MCP
+
+Each skill is vendored **exactly** the refs it declares in its `platform_refs`. Nothing is copied implicitly, because the two tiers have very different blast radii:
+
+| Tier | Who can get the `.skill` | May declare |
+|---|---|---|
+| **demo** | Anyone — public GitHub Release, linked from forvex.app | `public` refs only |
+| **mcp** | Account holders, inside the Claude Teams workspace | any ref |
+
+Every file in `platform/references/` is classified `public` or `internal` under `platform_ref_visibility` in `skills/SKILL_REGISTRY.json`. Internal refs carry things that must not ship publicly — HV framing and thresholds, the MCP tool surface, comp methodology, internal service paths.
+
+Three rules are enforced by `scripts/lint-skills.py` **and** by `package.sh`, so a mistake fails CI rather than shipping:
+
+1. A demo-tier skill declaring an `internal` ref fails the build.
+2. A file in `platform/references/` with no visibility entry fails the build.
+3. A ref used in a skill's markdown but not declared fails the build — since only declared refs are vendored, an undeclared one would be a dead link inside the packaged skill.
+
+When adding a platform ref, classify it in the same commit. When a demo skill needs routing guidance, point it at `skill-routing-public.md` — never at `skill-routing.md`, which names MCP write tools.
 
 ## Governance
 
@@ -84,7 +104,7 @@ Internal: open a PR — CI runs `scripts/lint-skills.py` and script unit tests. 
 
 When changing an existing skill:
 
-1. Update `skills/SKILL_REGISTRY.json` if tools, lane, or handoffs change.
+1. Update `skills/SKILL_REGISTRY.json` if tools, lane, handoffs, or `platform_refs` change.
 2. Update `platform/mcp-tools.registry.json` if you add MCP tools (coordinate with recontrol).
 3. Bump the next release tag and call out the change in the PR description.
 

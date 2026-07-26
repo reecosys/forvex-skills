@@ -15,6 +15,7 @@ MCP_REGISTRY_PATH = REPO / "platform" / "mcp-tools.registry.json"
 PLATFORM_REFS = REPO / "platform" / "references"
 
 CROSS_SKILL_RE = re.compile(r"\.\./(?:forvex|readvise)-[a-z0-9-]+/")
+PLATFORM_REF_USE_RE = re.compile(r"references/platform/([a-z0-9-]+)\.md")
 TOOL_RE = re.compile(r"\b((?:forvex|readvise)_[a-z0-9_]+)\b")
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
 
@@ -113,6 +114,53 @@ def lint() -> int:
             for ref in meta.get("platform_refs", []):
                 if ref not in platform_files:
                     errors.append(f"{skill_id}: platform_refs entry missing file: {ref}.md")
+
+    # ---- Platform ref visibility -------------------------------------------
+    # demo-tier .skill files are downloadable by anyone from a public release,
+    # so they may only carry refs marked "public". package.sh vendors exactly
+    # what each skill declares, which makes these declarations load-bearing:
+    # an undeclared ref is a broken link at runtime, and a misclassified one is
+    # a confidential doc shipped to the public.
+    visibility = {k: v for k, v in registry.get("platform_ref_visibility", {}).items()
+                  if not k.startswith("_")}
+
+    for ref in sorted(platform_files - set(visibility)):
+        errors.append(
+            f"platform/references/{ref}.md has no platform_ref_visibility entry "
+            f"(classify it 'public' or 'internal' in SKILL_REGISTRY.json)"
+        )
+    for ref in sorted(set(visibility) - platform_files):
+        errors.append(f"platform_ref_visibility lists missing file: {ref}.md")
+    for ref, vis in sorted(visibility.items()):
+        if vis not in ("public", "internal"):
+            errors.append(f"platform_ref_visibility['{ref}']: bad value {vis!r} "
+                          f"(expected 'public' or 'internal')")
+
+    for skill_id in skill_dirs:
+        meta = registry["skills"].get(skill_id, {})
+        if not meta:
+            continue
+        declared = meta.get("platform_refs", [])
+
+        if meta.get("tier") == "demo":
+            leaked = [r for r in declared if visibility.get(r) != "public"]
+            if leaked:
+                errors.append(
+                    f"{skill_id}: demo-tier skill declares internal platform refs {leaked} — "
+                    f"demo bundles ship publicly"
+                )
+
+        # Anything the skill's markdown points at must be declared, or
+        # package.sh won't vendor it and the link dies in the packaged skill.
+        mentioned: set[str] = set()
+        for md in (SKILLS_DIR / skill_id).rglob("*.md"):
+            for m in PLATFORM_REF_USE_RE.finditer(md.read_text(encoding="utf-8")):
+                mentioned.add(m.group(1))
+        for ref in sorted((mentioned & platform_files) - set(declared)):
+            errors.append(
+                f"{skill_id}: references/platform/{ref}.md used in markdown but not declared "
+                f"in platform_refs — it will be missing from the packaged .skill"
+            )
 
     # Bundle membership
     bundled: set[str] = set()

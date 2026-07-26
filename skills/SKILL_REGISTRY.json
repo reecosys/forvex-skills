@@ -1,10 +1,26 @@
 {
   "mcp_min_version": "0.4.0",
   "contract": "reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md",
+  "platform_ref_visibility": {
+    "_doc": "Visibility of each platform/references/*.md. 'public' may ship inside a demo-tier .skill, which anyone can download from a public release. 'internal' never leaves the Claude Teams workspace and may only be vendored into mcp-tier bundles. package.sh vendors exactly the refs a skill declares; lint-skills.py fails the build if a demo-tier skill declares an internal ref, or if a ref on disk is unclassified here.",
+    "skill-routing-public": "public",
+    "write-discipline": "public",
+    "skill-routing": "internal",
+    "resolve-context": "internal",
+    "mcp-tools": "internal",
+    "comp-evaluation": "internal",
+    "forvex-frame": "internal"
+  },
   "bundles": {
     "demo": {
       "label": "Demo (no account)",
-      "skills": ["forvex-mao", "forvex-rehab-light", "forvex-finish", "forvex-postmortem"]
+      "skills": [
+        "forvex-mao",
+        "forvex-rehab-light",
+        "forvex-finish",
+        "forvex-postmortem",
+        "accountability-partner"
+      ]
     },
     "redeal": {
       "label": "REdeal — acquire & close",
@@ -38,6 +54,14 @@
     }
   },
   "skills": {
+    "accountability-partner": {
+      "lane": "demo",
+      "tier": "demo",
+      "writes": [],
+      "reads": [],
+      "handoffs": ["weekly-accountability"],
+      "platform_refs": ["skill-routing-public"]
+    },
     "forvex-activity-log": {
       "lane": "redeal",
       "tier": "mcp",
@@ -87,7 +111,7 @@
       "writes": [],
       "reads": [],
       "handoffs": [],
-      "platform_refs": ["skill-routing"]
+      "platform_refs": ["skill-routing-public"]
     },
     "forvex-mao": {
       "lane": "demo",
@@ -95,7 +119,7 @@
       "writes": [],
       "reads": [],
       "handoffs": ["forvex-underwriting"],
-      "platform_refs": ["skill-routing"]
+      "platform_refs": ["skill-routing-public"]
     },
     "forvex-onboarding": {
       "lane": "redeal",
@@ -119,7 +143,7 @@
       "writes": [],
       "reads": [],
       "handoffs": [],
-      "platform_refs": ["skill-routing"]
+      "platform_refs": ["skill-routing-public"]
     },
     "forvex-presentation": {
       "lane": "redeal",
@@ -168,7 +192,7 @@
       "writes": [],
       "reads": [],
       "handoffs": ["forvex-rehab-estimator"],
-      "platform_refs": ["skill-routing"]
+      "platform_refs": ["skill-routing-public"]
     },
     "forvex-underwriting": {
       "lane": "redeal",
