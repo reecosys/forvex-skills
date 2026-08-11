@@ -12,7 +12,7 @@ This file defines the warnings and "don't let the user shoot themselves in the f
 
 ## Precedence chain — buy-box drives guardrails
 
-When `my-buy-box.md` is present in project knowledge, its values override HV defaults for **scoring AND guardrails**, not just scoring. Specifically:
+When `my-buy-box.md` is present in project knowledge, its values override forVEX defaults for **scoring AND guardrails**, not just scoring. Specifically:
 
 | Buy-box field | Affects |
 |---|---|

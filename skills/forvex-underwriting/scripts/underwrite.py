@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-HomeVestors underwriting calculator.
+forVEX underwriting calculator.
 
 Ports the deterministic math from redeal-mobile/app/services/calculator/* into a
 single Python module the skill can shell out to. Returns a JSON object with the
@@ -109,16 +109,16 @@ DEFAULTS = {
     "franchise_fee_default_level": 4,           # mid-table fallback
     "franchise_fee_default_type": "full",
 
-    # Pre-Offer (HV walk-in number): purchase ceiling as % of ARV, repairs NOT
+    # Pre-Offer (walk-in number): purchase ceiling as % of ARV, repairs NOT
     # subtracted from the base. Distinct from target_entry_pct_arv, which is
     # an ALL-IN ceiling (purchase + rehab + closing). Pre-offer is purchase-only.
     "pre_offer_pct": 0.65,
     # Quick rehab estimation by condition tier ($/sqft). Used for a
     # repair-adjusted pre-offer when sqft + tier are known but no detailed
-    # rehab estimate exists. HV-tunable.
+    # rehab estimate exists. forVEX-tunable.
     "rehab_per_sqft": {"light": 15, "medium": 25, "heavy": 40, "gut": 60},
 
-    # Buy-box targets (HV defaults; per-user overrides via my-buy-box.md)
+    # Buy-box targets (forVEX defaults; per-user overrides via my-buy-box.md)
     "target_profit_assignment": 15000,
     "target_profit_wholesale": 15000,
     "target_roi_wholesale": 0.25,
@@ -175,7 +175,7 @@ def estimate_rehab_by_sqft(sqft: float, tier: str) -> float:
 
 def compute_pre_offer(arv: float, sqft: float = None, rehab_tier: str = None,
                       rehab_estimate: float = None, pre_offer_pct: float = None) -> dict:
-    """HV walk-in 'Pre-Offer Number'.
+    """walk-in 'Pre-Offer Number'.
 
     Base ceiling is purchase / ARV <= pre_offer_pct (default 65%), with repairs
     NOT subtracted — that's the number you walk in with before seeing the house.
@@ -208,7 +208,7 @@ def compute_pre_offer(arv: float, sqft: float = None, rehab_tier: str = None,
 
 
 def franchise_fee_pct(level: int = None, ftype: str = None) -> float:
-    """Look up HV franchise fee as a % of sale price.
+    """Look up franchise fee as a % of sale price.
 
     level: 1-6 (1 = newest, 6 = most senior)
     ftype: 'full' | 'associate' — associate franchises add 2%
@@ -249,7 +249,7 @@ def build_financing_costs(basis: float, posture: str, months: int,
                           hm_rate: float = None, hm_points: float = None) -> dict:
     """Posture: 'cash' | 'company' | 'loc' | 'hard_money'.
 
-    Default is hard_money per HV bias. LOC charges internal cost of capital
+    Default is hard_money per forVEX bias. LOC charges internal cost of capital
     (7% default) with no points — like company money but reflects opportunity
     cost on franchise's own line of credit.
 
@@ -301,7 +301,7 @@ def build_sale_fees(sale_price: float, marketing: float = 0,
     """Sale-side costs: franchise transaction fee + other + marketing.
 
     Franchise fee replaces the prior flat transaction_fee_rate. It's computed
-    from the franchisee's level + type per HV schedule.
+    from the franchisee's level + type per franchise fee schedule.
     """
     fee_pct = franchise_fee_pct(franchise_level, franchise_type)
     other = sale_price * (other_rate if other_rate is not None else DEFAULTS["other_sale_fee_rate"])
@@ -1359,7 +1359,7 @@ def underwrite(inputs: dict) -> dict:
             current_year=int(inputs.get("current_year", 2026)),
         )
 
-    # Pre-Offer (HV walk-in number): purchase / ARV ≤ 65%, repairs handled
+    # Pre-Offer (walk-in number): purchase / ARV ≤ 65%, repairs handled
     # separately. If sqft given, also surfaces a repair-adjusted version.
     pre_offer = compute_pre_offer(
         arv,

@@ -9,7 +9,7 @@ Every KPI used in the deal one-pager. When a user asks "what is DSCR?" or "how i
 ### Net Profit
 - **Definition:** Predicted sale price minus total cost basis.
 - **Why it matters:** The dollar number that actually hits your pocket. The primary metric for flips.
-- **Rule of thumb:** HV target is $40,000+. Below $20k, the deal rarely justifies the risk for retail; below $10k for wholesale, the spread is too thin.
+- **Rule of thumb:** forVEX target is $40,000+. Below $20k, the deal rarely justifies the risk for retail; below $10k for wholesale, the spread is too thin.
 
 ### ROI (Return on Investment)
 - **Definition:** Net profit / total cost basis × 100.
@@ -39,7 +39,7 @@ Every KPI used in the deal one-pager. When a user asks "what is DSCR?" or "how i
 
 ### Entry % of ARV
 - **Definition:** All-in cost (purchase + rehab + closing) / ARV.
-- **Why it matters:** The classic "70% rule" lives here. Below 65% is HV target; above 75% the math gets aggressive.
+- **Why it matters:** The classic "70% rule" lives here. Below 65% is forVEX target; above 75% the math gets aggressive.
 
 ---
 
@@ -48,7 +48,7 @@ Every KPI used in the deal one-pager. When a user asks "what is DSCR?" or "how i
 ### Annual Cashflow
 - **Definition:** (Effective income − operating expenses − debt service) × 12.
 - **Why it matters:** The dollar number a rental actually produces. Primary rental metric.
-- **Rule of thumb:** $3,000/yr ($250/mo) is the HV baseline. Below $100/mo is too thin for capex shocks.
+- **Rule of thumb:** $3,000/yr ($250/mo) is the forVEX baseline. Below $100/mo is too thin for capex shocks.
 
 ### Cash-on-Cash Return (CoC)
 - **Definition:** Annual cashflow / cash invested × 100.

@@ -5,9 +5,9 @@ description: Pre-meeting brief for a seller appointment. Pulls property data + c
 
 > **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
 
-# HomeVestors Appointment Prep
+# forVEX Appointment Prep
 
-You are preparing a HomeVestors franchisee for an in-person (or call) appointment with a seller. The goal: walk into that meeting with the property numbers in your head, a defensible offer range, an informed read on the seller's likely posture, and a short list of questions you need answered to lock the deal in or kill it.
+You are preparing a franchise operator for an in-person (or call) appointment with a seller. The goal: walk into that meeting with the property numbers in your head, a defensible offer range, an informed read on the seller's likely posture, and a short list of questions you need answered to lock the deal in or kill it.
 
 You do not invent seller motivation. You synthesize signals from data + the franchisee's notes.
 
@@ -184,7 +184,7 @@ Quick reference; see `references/question-bank.md` for full mapping:
 
 From `references/platform/forvex-frame.md`:
 
-- **Lead with speed and certainty** — "I can close in 14 days, no contingencies, cash" is HV's edge over retail offers.
+- **Lead with speed and certainty** — "I can close in 14 days, no contingencies, cash" is the cash-buyer's edge over retail offers.
 - **Anchor on rehab scope, not ARV** — sellers argue values; they don't argue rehab costs.
 - **Use calibrated questions (Voss)**: "How are you supposed to make this work at [their ask]?" "What's the situation behind selling?" "How did you arrive at [their number]?"
 - **Mirror + label (Voss)**: "Sounds like [emotion]..." "It seems like timing matters most..."

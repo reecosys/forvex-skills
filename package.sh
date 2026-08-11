@@ -32,7 +32,7 @@ discover_skills() {
 #
 # demo-tier .skill files are downloadable by anyone from a public GitHub
 # Release, so a demo skill may only declare refs marked "public" in
-# platform_ref_visibility. Internal refs (forvex-frame's HV framing, the MCP
+# platform_ref_visibility. Internal refs (forvex-frame's forVEX framing, the MCP
 # tool surface, comp methodology, resolve-context) never leave the Teams
 # workspace. This function hard-fails the build rather than silently dropping
 # a ref — a quiet drop would ship a skill whose governance doc is missing.

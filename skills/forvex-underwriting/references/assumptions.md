@@ -8,7 +8,7 @@ Source of truth: `redeal-mobile/app/services/calculator/assumptionsResolver.ts` 
 
 1. User input this turn
 2. `my-buy-box.md` from project knowledge (per-franchisee overrides)
-3. `forvex-frame.md` (HV-default targets and proprietary tables)
+3. `forvex-frame.md` (forVEX-default targets and proprietary tables)
 4. This file (calculation defaults)
 
 ---
@@ -82,13 +82,13 @@ Total holding cost = `(tax + insurance + utilities) × holding_months`
 - Assignment: no title (assignor doesn't close)
 
 ### Sale fees
-- **HV franchise transaction fee**: per franchise level + type schedule (see `forvex-frame.md`)
+- **franchise transaction fee**: per franchise level + type schedule (see `forvex-frame.md`)
 - Other sale fees: ~0.2% of sale price
 - Marketing: $500 flat (retail flip only)
 
 ---
 
-## HV franchise transaction fee schedule
+## franchise transaction fee schedule
 
 Replaces the prior flat `transaction_fee_rate`. The fee is computed from the franchisee's level + type, captured in onboarding and stored in `my-buy-box.md`.
 
@@ -113,13 +113,13 @@ This fee materially affects deal economics — a Level 1 Associate (5%) vs. Leve
 
 ## Capital posture
 
-**Default for fresh analysis: `hard_money`** (HV bias — most franchisees lean on hard money for flips).
+**Default for fresh analysis: `hard_money`** (forVEX bias — most franchisees lean on hard money for flips).
 
 | Posture | Annual rate | Points | Notes |
 |---|---|---|---|
 | `cash` | 0% | 0% | no financing cost |
 | `loc` (line of credit) | 7.0% | 0% | franchise's internal cost of capital — cash-equivalent timing, but reflects opportunity cost |
-| `company` | 8.0% | 0% | internal HV / partner capital |
+| `company` | 8.0% | 0% | internal partner capital |
 | `hard_money` | 12.0% | 2% of financed basis | one-time points + monthly interest |
 
 Formula:
@@ -187,7 +187,7 @@ These don't change the verdict; they're informational. Surface them when compari
 
 ---
 
-## Target metrics (HV defaults)
+## Target metrics (forVEX defaults)
 
 These are the targets used when the buy-box doesn't override them. Per-user overrides come from `my-buy-box.md`.
 
@@ -209,7 +209,7 @@ These are the targets used when the buy-box doesn't override them. Per-user over
 
 ---
 
-## Pre-Offer Number (HV walk-in number)
+## Pre-Offer Number (walk-in number)
 
 The Pre-Offer is the simple number a franchisee walks into an appointment with — distinct from the precise underwriting MAO.
 
@@ -294,7 +294,7 @@ When the address indicates one of these markets, override the rate and flag it. 
 - Rent (use 1% rule as placeholder, mark `[1% rule]`)
 - Condition (default `moderate`)
 - Property tax / insurance rates (use national defaults above)
-- Financing posture (default `hard_money` per HV bias; offer to re-run with cash/loc)
+- Financing posture (default `hard_money` per forVEX bias; offer to re-run with cash/loc)
 - Franchise level/type (default L4 Full at 1.25%; prompt user to run `forvex-onboarding`)
 - Location type (default `suburban` if uncertain)
 

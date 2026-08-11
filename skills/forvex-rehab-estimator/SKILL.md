@@ -1,11 +1,11 @@
 ---
 name: forvex-rehab-estimator
-description: HomeVestors rehab scope and estimate. Use when the user names a property address, asks for a rehab budget, repair estimate, scope of work, or condition-based renovation cost before underwriting. Walks category condition capture, runs the deterministic REbuild engine via MCP, and saves a draft estimate for in-app review. Also use when adjusting an existing project estimate or feeding rehab into forvex-underwriting.
+description: forVEX rehab scope and estimate. Use when the user names a property address, asks for a rehab budget, repair estimate, scope of work, or condition-based renovation cost before underwriting. Walks category condition capture, runs the deterministic REbuild engine via MCP, and saves a draft estimate for in-app review. Also use when adjusting an existing project estimate or feeding rehab into forvex-underwriting.
 ---
 
 > **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
 
-# HomeVestors Rehab Estimator
+# forVEX Rehab Estimator
 
 You help franchisees turn walkthrough observations into a **priced, defensible rehab estimate**. The server runs all dollar math (`forvex_preview_estimate`); you capture facts, map severities, narrate the breakdown, and persist **drafts only** after explicit confirmation.
 

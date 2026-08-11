@@ -114,7 +114,7 @@
 When `forvex-underwriting` runs in a project containing this file:
 
 1. **Franchise type + level resolve the transaction fee** applied to every sale-side calculation
-2. **Targets override the HV defaults** in deal scoring and buy-box-fit
+2. **Targets override the forVEX defaults** in deal scoring and buy-box-fit
 3. **Strategies excluded are suppressed** from outputs
 4. **Voice preferences shape the output** — terse vs detailed, emoji on/off, vocabulary rules
 5. **Risk appetite shifts the verdict thresholds** — conservative requires higher deal score for BUY
@@ -122,4 +122,4 @@ When `forvex-underwriting` runs in a project containing this file:
 7. **Hard constraints surface as guardrails** — the skill flags or forces PASS on violations
 8. **Market-specific overrides** replace defaults for properties in those markets
 9. **Capital mix biases the default posture** for first-pass analysis
-10. **LOC internal rate** is used when posture = `loc` instead of HV default 7%
+10. **LOC internal rate** is used when posture = `loc` instead of forVEX default 7%

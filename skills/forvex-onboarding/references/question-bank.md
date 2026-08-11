@@ -13,7 +13,7 @@ When a user answers in an unexpected format, normalize it and confirm back ("got
 **Captures:** `name` (string)
 
 ### Q2. Franchise / market name
-**Ask:** "What's the franchise / business name? (e.g., 'HomeVestors of Dallas-Fort Worth')"
+**Ask:** "What's the franchise / business name? (e.g., 'Acme Investors of Dallas-Fort Worth')"
 **Captures:** `franchise_name` (string)
 
 ### Q3. Franchise type
@@ -24,7 +24,7 @@ When a user answers in an unexpected format, normalize it and confirm back ("got
 ### Q4. Franchise level
 **Ask:** "What's your franchise level? 1, 2, 3, 4, 5, or 6?"
 **Captures:** `franchise_level` (int 1–6)
-**Why:** Drives the transaction fee per HV schedule.
+**Why:** Drives the transaction fee per franchise fee schedule.
 
 **Confirmation back:** After capturing Q3 + Q4, compute and confirm:
 - Full Franchise: L1=3.0%, L2=2.0%, L3=1.5%, L4=1.25%, L5=1.0%, L6=0.8%
@@ -144,12 +144,12 @@ Example: "Got it — Level 4 Full Franchise = 1.25% transaction fee."
 
 ### Q21. Capital mix
 **Ask:** "Capital mix — what % of your deals run on: cash, line of credit (LOC), company money, hard money?"
-**Default:** 100% hard_money (HV bias)
+**Default:** 100% hard_money (forVEX bias)
 **Captures:** `capital_mix` ({cash, loc, company, hard_money} as percentages summing to 100)
 **Why:** Lets us pre-run analysis with the right financing posture without asking each time.
 
 ### Q22. LOC internal rate
-**Ask:** "If you use line of credit, what's your internal cost of capital — the rate the franchise charges itself? (HV default: 7%)"
+**Ask:** "If you use line of credit, what's your internal cost of capital — the rate the franchise charges itself? (forVEX default: 7%)"
 **Default:** 7%
 **Captures:** `loc_internal_rate` (%)
 **Why:** LOC is cash-equivalent for timing (no closing on financing) but carries an opportunity cost. Varies by franchise maturity.
@@ -217,5 +217,5 @@ Examples to suggest:
 ## Notes for interview pacing
 
 - 29 questions sounds like a lot, but most batches are 3-question sets the user can answer in one message. Skip rental batch if not active. Realistic time: 15–20 minutes.
-- If the user fatigues, offer to use HV defaults for remaining questions.
+- If the user fatigues, offer to use forVEX defaults for remaining questions.
 - **Always confirm the franchise fee rate after Q3+Q4.** That single number affects every deal.

@@ -116,7 +116,7 @@ Beyond the primary Readvise motivation, the franchisee may surface additional si
 | Signal | Implication |
 |---|---|
 | Recent rehab or staged listing | Seller is pricing for retail; investor offers won't land |
-| Multiple offers reported | Bidding situation; HV edge is speed, not price |
+| Multiple offers reported | Bidding situation; cash-buyer edge is speed, not price |
 | "Just testing the market" said explicitly | Walk |
 | Sentimental attachment (raised kids here) | Price will be sticky; lead with empathy not math |
 | Listing realtor pushing back hard | Agent is the obstacle, not the seller — ask if direct seller call is possible |
@@ -239,7 +239,7 @@ The brief picks 3–4 of these to lead with.
 ### Other / Not stated
 
 - Lead with discovery: "Tell me about the situation that brought you to this point."
-- Lead with HV edge: "We buy as-is, close in 14 days, cash, no contingencies. What's most important to you?"
+- Lead with cash-buyer edge: "We buy as-is, close in 14 days, cash, no contingencies. What's most important to you?"
 
 ---
 

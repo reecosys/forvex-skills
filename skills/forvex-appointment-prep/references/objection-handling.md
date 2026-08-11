@@ -1,6 +1,6 @@
 # Objection Handling
 
-Structured responses to the objections HV franchisees hit most often in seller appointments. This closes a gap the HV Appointment Process v2.0 itself flags as a coaching need ("develop structured responses for common objections").
+Structured responses to the objections forVEX franchisees hit most often in seller appointments. This closes a gap the Appointment Process v2.0 itself flags as a coaching need ("develop structured responses for common objections").
 
 **How the skill uses this:** when prepping a brief, include 2–3 objections most likely for *this* seller's posture (based on Readvise motivation + asking-vs-MAO gap), with the framed response. Don't dump all of them — pick what fits. Post-meeting, if the franchisee says "they pushed back on X," pull the matching response.
 
@@ -74,7 +74,7 @@ Every response should:
 **Response:**
 > "That's great — you should absolutely take the best path for you. The thing to weigh: a listing is a *hope* at a higher number, minus commissions, minus the months of showings, minus whatever repairs a retail buyer's inspector flags. Mine's a *certain* number, cash, as-is, closing in [14] days, nothing falls through. **If certainty and speed weren't a factor, what would make the listing route worth the wait for you?**"
 
-**Principle:** Don't disparage the competing option. Reframe the comparison as *certain-now* vs *maybe-more-later-minus-costs*. HV's edge is speed + certainty, not top dollar — lean into it. The calibrated question makes them weigh the tradeoff out loud.
+**Principle:** Don't disparage the competing option. Reframe the comparison as *certain-now* vs *maybe-more-later-minus-costs*. the cash-buyer's edge is speed + certainty, not top dollar — lean into it. The calibrated question makes them weigh the tradeoff out loud.
 
 ---
 

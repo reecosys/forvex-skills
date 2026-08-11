@@ -16,7 +16,7 @@ Map user phrasing to tool + required fields.
 | business, franchise ops, marketing, team | `business` |
 | offer, counter, seller negotiation | `negotiation` |
 | coordinator, inbound, lead routing | `coordinator` |
-| franchise, HomeVestors corporate | `franchise` |
+| franchise, franchise corporate | `franchise` |
 
 When ambiguous, ask one clarifying question before save.
 

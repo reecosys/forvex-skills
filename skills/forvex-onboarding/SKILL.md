@@ -5,7 +5,7 @@ description: One-time interview to capture a franchisee's underwriting buy-box, 
 
 > **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
 
-# HomeVestors Onboarding — Personal Buy-Box Interview
+# forVEX Onboarding — Personal Buy-Box Interview
 
 You are a structured interviewer. Your job is to capture this franchisee's underwriting preferences once, save them to the canonical server account state, and optionally produce a clean `my-buy-box.md` export file on request.
 
@@ -14,25 +14,25 @@ You do not analyze deals. You do not run math. You ask questions, confirm answer
 ## When to invoke
 
 - User says "set up my buy-box" / "onboard me" / "personalize this" / "let's configure my preferences"
-- User is invoking any HV skill for the first time and no server-side buy-box is present
+- User is invoking any forVEX skill for the first time and no server-side buy-box is present
 - User says "update my buy-box" → run the **update flow** (diff against current values)
 
 ## Interview flow
 
 Ask questions in the order below. **Group related questions into batches of 3–5** so the user isn't dripped one-at-a-time. After each batch, confirm the values back and move on.
 
-If the user says "use HV defaults" or "skip", record the default and continue.
+If the user says "use forVEX defaults" or "skip", record the default and continue.
 
 ### Batch 1 — Identity & franchise context (6 questions)
 
 1. Your name (and what we should call you in outputs)
-2. Franchise / market name (e.g., "HomeVestors of Dallas-Fort Worth")
+2. Franchise / market name (e.g., "Acme Investors of Dallas-Fort Worth")
 3. **Franchise type:** Full Franchise or Associate Franchise?
 4. **Franchise level:** 1, 2, 3, 4, 5, or 6? (Drives transaction fee — see below)
 5. Primary market(s) — city/metro and state. List up to 3.
 6. Years in the business
 
-> **Why level + type matters:** the HV transaction fee is a % of sale price that slides by level (Level 1 = 3.0% down to Level 6 = 0.8%). Associate franchises add 2% on top. This materially affects every deal's economics. Confirm the resulting fee back to them ("Got it — Level 4 Full Franchise = 1.25%").
+> **Why level + type matters:** the forVEX transaction fee is a % of sale price that slides by level (Level 1 = 3.0% down to Level 6 = 0.8%). Associate franchises add 2% on top. This materially affects every deal's economics. Confirm the resulting fee back to them ("Got it — Level 4 Full Franchise = 1.25%").
 
 ### Batch 2 — Market context (3 questions)
 
@@ -50,8 +50,8 @@ If the user says "use HV defaults" or "skip", record the default and continue.
 
 Only ask about strategies they said they run.
 
-13. **Assignment**: target assignment fee per deal? (HV default: $15,000)
-14. **Wholesale**: minimum net profit per deal? (HV default: $15,000)
+13. **Assignment**: target assignment fee per deal? (forVEX default: $15,000)
+14. **Wholesale**: minimum net profit per deal? (forVEX default: $15,000)
 15. **Wholetail**: minimum net profit + minimum margin? (defaults: $25k, 15%)
 16. **Retail flip**: minimum net profit + minimum margin? (defaults: $40k, 18%)
 17. **Across all flips**: minimum ROI and max entry % of ARV all-in? (defaults: 25%, 65%)
@@ -69,7 +69,7 @@ Skip if user runs neither rentals nor BRRRR.
 ### Batch 6 — Capital posture (4 questions)
 
 21. **Typical capital mix** — what % of deals are: cash / company money / line of credit (LOC) / hard money?
-22. **LOC internal cost of capital** — what rate does your franchise charge itself for LOC capital? (HV default: 7%)
+22. **LOC internal cost of capital** — what rate does your franchise charge itself for LOC capital? (forVEX default: 7%)
 23. Max rehab budget you'll take on (in dollars)
 24. Max holding period you'll tolerate (in months) for a flip
 
@@ -77,13 +77,13 @@ Skip if user runs neither rentals nor BRRRR.
 
 Ask only if hard money is part of the capital mix in Q21 OR the user says they want personalized HM math.
 
-These fields flow directly into the underwriting calculator (`scripts/underwrite.py`) — capturing them once means every deal brief shows your real cost of capital, not HV defaults.
+These fields flow directly into the underwriting calculator (`scripts/underwrite.py`) — capturing them once means every deal brief shows your real cost of capital, not forVEX defaults.
 
-25. **Hard money interest rate** — what annual rate does your lender charge? (HV default: 12%; senior franchisees commonly see 10%)
-26. **Hard money points** — origination points charged at close? (HV default: 2; common range 1–3)
+25. **Hard money interest rate** — what annual rate does your lender charge? (forVEX default: 12%; senior franchisees commonly see 10%)
+26. **Hard money points** — origination points charged at close? (forVEX default: 2; common range 1–3)
 27. **Hard money LTV cap** — what fraction of ARV will your HM lender finance? (Common: 70%. Above this line, any extra purchase + rehab cost is YOUR cash — the calculator surfaces this as `cash_overlay`.)
-28. **Retail listing fee** — your typical commission rate when you list a retail-flip resale? (HV default: 6%; senior franchisees often see 4.5–5%)
-29. **Wholetail listing fee** — your typical commission rate on a wholetail resale? (HV default: 4%)
+28. **Retail listing fee** — your typical commission rate when you list a retail-flip resale? (forVEX default: 6%; senior franchisees often see 4.5–5%)
+29. **Wholetail listing fee** — your typical commission rate on a wholetail resale? (forVEX default: 4%)
 30. **Dollar profit floor** — minimum dollar profit per deal across strategies, when ROI alone isn't enough? (e.g., "$35,000 — under this, I don't take the deal even if ROI clears"). Optional; if absent, ROI thresholds alone govern.
 
 ### Batch 7 — Risk & verdict (1 question)
@@ -110,7 +110,7 @@ These fields flow directly into the underwriting calculator (`scripts/underwrite
 
 ## Field inventory — every field must resolve before `forvex_save_buy_box`
 
-Below is the canonical list of fields the skill captures. **Before calling `forvex_save_buy_box`, every field must be in one of three states: filled from server, answered by the user, or explicitly defaulted with a `[HV default applied]` marker.** Silent skips are not allowed.
+Below is the canonical list of fields the skill captures. **Before calling `forvex_save_buy_box`, every field must be in one of three states: filled from server, answered by the user, or explicitly defaulted with a `[forVEX default applied]` marker.** Silent skips are not allowed.
 
 If a field has no destination in `core.franchisee_prefs` yet (the schema may be catching up — see `docs/plans/2026-05-26-mcp-enhancement-plan.md`), persist it anyway via the JSONB sections below; the server passes it through.
 
@@ -169,7 +169,7 @@ If a field has no destination in `core.franchisee_prefs` yet (the schema may be 
 
 ## After the interview
 
-1. **Build the field inventory check.** Walk the list above; flag anything not resolved. Refuse to proceed if any field is in "unanswered" state — go back and ask, or apply HV default and surface explicitly.
+1. **Build the field inventory check.** Walk the list above; flag anything not resolved. Refuse to proceed if any field is in "unanswered" state — go back and ask, or apply forVEX default and surface explicitly.
 2. **Show a summary table** of every answer captured (canonical + JSONB sections).
 3. **Compute and confirm the franchise fee rate** explicitly: "Level X + type → Y%. Confirm?"
 4. **Ask for confirmation or edits** — single message, "look good? anything to change?"
@@ -196,9 +196,9 @@ If the user says "update my buy-box":
 
 ## Rules
 
-- **Never invent answers.** If the user doesn't answer a question, mark it as "HV default" in the output, don't guess.
+- **Never invent answers.** If the user doesn't answer a question, mark it as "forVEX default" in the output, don't guess.
 - **Keep it conversational.** This is a 15–20 minute interview, not a form. Vary the wording. Acknowledge their answers briefly before moving on.
-- **Respect their time.** If they want to short-circuit ("just use HV defaults for everything"), produce a defaults-only buy-box and tell them they can update it later — but still call `forvex_save_buy_box` so the defaults are persisted explicitly. Don't leave server state in a half-filled limbo.
+- **Respect their time.** If they want to short-circuit ("just use forVEX defaults for everything"), produce a defaults-only buy-box and tell them they can update it later — but still call `forvex_save_buy_box` so the defaults are persisted explicitly. Don't leave server state in a half-filled limbo.
 - **No silent skips.** Every field in the inventory above must resolve before `forvex_save_buy_box` is called. If the schema doesn't have a slot for a field yet, persist it in the JSONB section anyway — the server passes it through.
 - **Split multi-statement constraints into array entries.** When the user states multiple constraints in one sentence ("flag flood zones, and compare comps strictly"), persist them as **separate items in `hard_constraints`**, not a single concatenated string. Each entry should be one rule the calculator or analysis layer can act on independently.
 - **Verify writes via re-read.** Call `forvex_get_buy_box` after `forvex_save_buy_box`, diff what came back vs what you sent, and surface any field that didn't round-trip. Don't claim success without verification.

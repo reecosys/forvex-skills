@@ -1,6 +1,6 @@
 # forVEX Skills
 
-Claude Skills that turn Claude.ai into a real-estate-investment cockpit — deal pipeline, rehab estimating, project management, and underwriting — for HomeVestors franchisees and other operators using the forVEX platform.
+Claude Skills that turn Claude.ai into a real-estate-investment cockpit — deal pipeline, rehab estimating, project management, and underwriting — for franchise and multi-market operators using the forVEX platform.
 
 ## What's a Claude Skill?
 
@@ -42,7 +42,7 @@ platform/references/       # shared docs; each skill gets exactly the ones it de
   resolve-context.md       # internal — address → deal_id resolution
   mcp-tools.md             # internal — canonical MCP tool surface
   comp-evaluation.md       # internal — comps / ARV rules
-  forvex-frame.md          # internal — HV framing (confidential)
+  forvex-frame.md          # internal — forVEX framing (confidential)
 
 skills/
   SKILL_REGISTRY.json    # lanes, tools, handoffs, bundles (lint-enforced)
@@ -73,7 +73,7 @@ Each skill is vendored **exactly** the refs it declares in its `platform_refs`. 
 | **demo** | Anyone — public GitHub Release, linked from forvex.app | `public` refs only |
 | **mcp** | Account holders, inside the Claude Teams workspace | any ref |
 
-Every file in `platform/references/` is classified `public` or `internal` under `platform_ref_visibility` in `skills/SKILL_REGISTRY.json`. Internal refs carry things that must not ship publicly — HV framing and thresholds, the MCP tool surface, comp methodology, internal service paths.
+Every file in `platform/references/` is classified `public` or `internal` under `platform_ref_visibility` in `skills/SKILL_REGISTRY.json`. Internal refs carry things that must not ship publicly — forVEX framing and thresholds, the MCP tool surface, comp methodology, internal service paths.
 
 Three rules are enforced by `scripts/lint-skills.py` **and** by `package.sh`, so a mistake fails CI rather than shipping:
 

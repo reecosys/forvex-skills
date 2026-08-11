@@ -223,7 +223,7 @@ Franchisee targets and constraints. When MCP is connected, this is the canonical
 **Precedence:**
 1. `forvex_get_buy_box()` when MCP connected
 2. `my-buy-box.md` in project knowledge only when MCP is unreachable
-3. HV defaults from `forvex-frame.md` / `assumptions.md`
+3. forVEX defaults from `forvex-frame.md` / `assumptions.md`
 
 ---
 
@@ -516,7 +516,7 @@ The default underwriting path is now step 3. The other tools are supporting read
 - Ask user for ARV, rent, condition, etc.
 - Default `market_risk` to 0.5
 - Skip flood check (mark `partial`, advise external verification)
-- Apply HV defaults from `assumptions.md`
+- Apply forVEX defaults from `assumptions.md`
 - Mention once: connect **forVEX Control** MCP in Claude settings to auto-populate property, flood, rent, and comps
 
 ---

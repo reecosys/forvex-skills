@@ -1,6 +1,6 @@
-# HomeVestors Framing
+# forVEX Framing
 
-This is the file where HomeVestors-specific framing lives — voice, strategy priorities, capital posture, market context, and proprietary thresholds.
+This is the file where forVEX-specific framing lives — voice, strategy priorities, capital posture, market context, and proprietary thresholds.
 
 **Keeping this isolated in one file is intentional.** If we ever want a generic underwriter version of this skill (or to share parts publicly), deleting this file should degrade the skill to a generic real-estate underwriter without breaking anything.
 
@@ -8,7 +8,7 @@ This file is treated as confidential and stays inside the Claude Teams workspace
 
 ---
 
-## HV underwriting voice
+## forVEX underwriting voice
 
 Direct, decisive, numbers-first. Franchisees want clear go/no-go, not hedging.
 
@@ -24,7 +24,7 @@ Specific language preferences:
 
 ## Strategy taxonomy
 
-HV treats these as six distinct strategies. Industry sometimes conflates assignment with wholesale; we don't.
+forVEX treats these as six distinct strategies. Industry sometimes conflates assignment with wholesale; we don't.
 
 1. **Assignment** — Control the contract, assign to investor for a flat fee. Never close. Capital at risk: earnest money + marketing only.
 2. **Wholesale** — Take possession (default) or simultaneous double-close. Sell as-is to an investor. Investor pays rehab.
@@ -33,9 +33,9 @@ HV treats these as six distinct strategies. Industry sometimes conflates assignm
 5. **Rental** — Long-term hold, financed at acquisition (20% down).
 6. **BRRRR** — Buy, Rehab, Rent, Refi, Repeat. All-cash (or LOC) entry, stabilize 6 months, cash-out refi at 75% LTV. Long-term hold against the refi loan. Distinct from `rental` in capital path: rental finances upfront; BRRRR recovers most/all of the initial cash via refi.
 
-### Strategy bias (HV default)
+### Strategy bias (forVEX default)
 
-In a tie on deal score, HV historically prefers strategies that cycle capital faster:
+In a tie on deal score, forVEX historically prefers strategies that cycle capital faster:
 
 1. Assignment and wholesale (fastest)
 2. Wholetail (medium)
@@ -46,7 +46,7 @@ Per-user `primary_strategy` from `my-buy-box.md` overrides this default ordering
 
 ---
 
-## HV franchise transaction fee schedule
+## franchise transaction fee schedule
 
 **The transaction fee is a percent of sale price, sliding by franchise level. Associate franchises add 2% on top.**
 
@@ -65,11 +65,11 @@ This fee materially affects deal economics. A Level 1 Associate (5%) vs. Level 6
 
 ---
 
-## Target buy-box (HV defaults)
+## Target buy-box (forVEX defaults)
 
 Used when `my-buy-box.md` doesn't override.
 
-| Metric | HV target |
+| Metric | forVEX target |
 |---|---|
 | Assignment fee | ≥ $15,000 |
 | Wholesale net profit | ≥ $15,000 |
@@ -88,7 +88,7 @@ Used when `my-buy-box.md` doesn't override.
 
 ## Capital posture
 
-**HV baseline bias: hard money.** Most franchisees lean on hard money for flip strategies.
+**forVEX baseline bias: hard money.** Most franchisees lean on hard money for flip strategies.
 
 Mature franchises typically blend three sources:
 
@@ -96,7 +96,7 @@ Mature franchises typically blend three sources:
 - **Line of credit (LOC)** — internal cost of capital, treated as 7% default. Cash-equivalent timing (no closing on financing), but reflects opportunity cost on the franchise's own capital. The buy-box can override this rate per franchisee.
 - **Cash** — used for assignments, wholesale double-close, and senior-franchise opportunistic plays.
 
-Company money (8%) is also an option for partner/HV programs.
+Company money (8%) is also an option for partner programs.
 
 When a deal is analyzed without specifying posture, the skill defaults to `hard_money` and offers to re-run with LOC or cash. The capital mix from `my-buy-box.md` can drive a better default.
 
@@ -104,7 +104,7 @@ When a deal is analyzed without specifying posture, the skill defaults to `hard_
 
 ## Market posture — property-level, not state-level
 
-HV does not have a strong state-by-state market bias. Geographic posture is **property-level**, driven by location type:
+forVEX does not have a strong state-by-state market bias. Geographic posture is **property-level**, driven by location type:
 
 | Location type | Default market_risk | Posture |
 |---|---|---|
@@ -120,7 +120,7 @@ State-specific tax/insurance overrides (TX, FL, NJ, CA, etc.) are still applied 
 
 ## Negotiation framing (forward-looking for `forvex-negotiation`)
 
-The future `forvex-negotiation` skill should combine two negotiation traditions HV leans on:
+The future `forvex-negotiation` skill should combine two negotiation traditions forVEX leans on:
 
 - **Sandler bias** — pain-funnel questions, no-pressure framing, qualifying ruthlessly. The seller does most of the talking.
 - **Voss bias** (Chris Voss / *Never Split the Difference*) — tactical empathy, mirroring, labeling, calibrated questions, "how am I supposed to do that?"
@@ -128,7 +128,7 @@ The future `forvex-negotiation` skill should combine two negotiation traditions 
 Synthesis: empathetic discovery (Voss) + structured qualification (Sandler).
 
 Specific patterns:
-- Lead with "I can move quickly" — speed is HV's edge.
+- Lead with "I can move quickly" — speed is the cash-buyer's edge.
 - Anchor on rehab scope, not ARV — sellers don't argue with rehab costs the way they argue with values.
 - Standard counter framing: 70% of ARV minus rehab, rounded down to nearest $1,000.
 
@@ -141,7 +141,7 @@ Motivated-seller signals worth flagging:
 
 ## Things to never say in a deal analysis
 
-- Anything that compares HV to specific competitor brands by name
+- Anything that compares forVEX to specific competitor brands by name
 - Anything that promises a specific outcome ("you'll definitely make $X")
 - Anything that suggests circumventing standard due diligence
 - Anything proprietary to a specific franchise without that franchisee's input

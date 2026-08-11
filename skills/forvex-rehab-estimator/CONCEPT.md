@@ -9,7 +9,7 @@
 
 ## 1. Purpose
 
-We're extending the HomeVestors underwriting skill suite with a **rehab estimation** capability. We already have a full rehab-estimation app (analogous to redeal for underwriting). This concept proposes surfacing that engine through a **Claude skill** (the franchisee-facing workflow + judgment) backed by an **MCP server** (the deterministic cost engine, regional pricing, and estimate persistence — the part this team builds).
+We're extending the forVEX underwriting skill suite with a **rehab estimation** capability. We already have a full rehab-estimation app (analogous to redeal for underwriting). This concept proposes surfacing that engine through a **Claude skill** (the franchisee-facing workflow + judgment) backed by an **MCP server** (the deterministic cost engine, regional pricing, and estimate persistence — the part this team builds).
 
 The pattern is the same one we've used successfully for underwriting:
 
