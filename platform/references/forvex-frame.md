@@ -162,7 +162,7 @@ Motivated-seller signals worth flagging:
 
 With **forVEX Control MCP** connected:
 
-- **Property inputs** — map from `forvex_get_property` + optional `forvex_get_comps` (address, ARV, beds/baths/sqft, condition estimate).
+- **Property inputs** — map from `forvex_get_property` + optional `forvex_get_comps` (address, ARV, beds/baths/sqft, condition, optional `parcel` physicals and winning debt).
 - **Buy-box overrides** — `forvex_get_buy_box()` or `my-buy-box.md` in project (see `data-sources.md` precedence).
 - **Deal context** — `forvex_get_deal(id)` / `forvex_list_deals()` when user references pipeline records.
 - **Write-back** — `forvex_save_deal`, `forvex_update_deal_disposition`, and `forvex_log_activity` (Phase 4 live). See `data-sources.md`.

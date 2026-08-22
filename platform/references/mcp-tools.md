@@ -4,7 +4,7 @@
 
 When the **forVEX Control MCP** is connected, pull data from it before asking the user. Server: `https://control.forvex.app/api/mcp` (OAuth — configure once in Claude → Connectors).
 
-> **Status (MCP 0.3.0):** Phase 1 read tools, Phase 4 write tools, and the learning-layer capture tools are **live**. Disconnect/reconnect the forVEX Control connector if tool names look stale. Every tool declares `outputSchema`; `forvex_get_comps` / `forvex_get_comp_detail` may include optional top-level `subject` and `search_params`. Market flip/rent scores may return `null` while tract resolution works — use MoM/YoY when scores are missing and default `market_risk` to 0.5. Auth failures read: *"Missing or invalid auth context. Re-authorize via /api/oauth/authorize (or refresh your Supabase session) and retry."*
+> **Status (MCP 0.3.0 / `TOOL_SCHEMA_VERSION` 0.6.0):** Phase 1 read tools, Phase 4 write tools, and the learning-layer capture tools are **live**. Disconnect/reconnect the forVEX Control connector if tool names look stale. Every tool declares `outputSchema`; `forvex_get_comps` / `forvex_get_comp_detail` may include optional top-level `subject` and `search_params`. `forvex_get_property` may include optional `parcel` (decoded last-sale flags, physicals, winning debt). Market flip/rent scores may return `null` while tract resolution works — use MoM/YoY when scores are missing and default `market_risk` to 0.5. Auth failures read: *"Missing or invalid auth context. Re-authorize via /api/oauth/authorize (or refresh your Supabase session) and retry."*
 
 ---
 
@@ -21,7 +21,7 @@ When MCP is connected, server state is authoritative. `my-buy-box.md` is only an
 | Tool | Phase | Purpose |
 |------|-------|---------|
 | `forvex_whoami` | 1 | Confirm auth + workspace (optional sanity check, not mandatory preflight) |
-| `forvex_get_property` | 1 | Property fundamentals + ARV from comps. Returns `property_id`. |
+| `forvex_get_property` | 1 | Property fundamentals + ARV from comps. Returns `property_id`. Optional `parcel` (0.6.0). |
 | `forvex_get_comps` | 1 | RealIE comps v3 — dual ARV/as-is, signals, pricing_hints (canonical 1mi/18mo cache) |
 | `forvex_get_comp_detail` | 1 | Full comps roster via `trace_ref.id` from `forvex_get_comps` |
 | `forvex_get_flood_data` | 1 | FEMA flood zone |
@@ -46,7 +46,7 @@ When MCP is connected, server state is authoritative. `my-buy-box.md` is only an
 
 Wraps Realie via `core.properties` + cache refresh.
 
-**Returns:**
+**Returns (0.5.0 keys always; `parcel` optional in 0.6.0):**
 ```json
 {
   "property_id": "3bc6012a-6576-43ae-b40b-1b38696b4315",
@@ -58,7 +58,36 @@ Wraps Realie via `core.properties` + cache refresh.
   "arv_confidence": "high",
   "condition_estimate": "moderate",
   "last_sold_price": 148000, "last_sold_date": "2016-04-18",
-  "comps_summary": "50 comps within 1mi, $70k–$715k range, median $225k"
+  "comps_summary": "50 comps within 1mi, $70k–$715k range, median $225k",
+  "sale_qualification": "TQ0002",
+  "recorded_lien_balance": null,
+  "current_lender": "Truist",
+  "parcel": {
+    "response_shape": "nested",
+    "last_sale": {
+      "date": "2024-10-21",
+      "price": 231830,
+      "deed": { "code": "TT0001", "label": "Warranty Deed" },
+      "qualification": { "code": "TQ0002", "label": "Arm's-Length" },
+      "arms_length": true,
+      "distressed": false,
+      "reo": false,
+      "buyer_entity": { "code": "BE0001", "label": "Individual" }
+    },
+    "physical": {
+      "garage": { "code": "PK0001", "label": "Attached Garage", "count": 2, "type": "attached" },
+      "foundation": { "code": "FN0004", "label": "Concrete Slab Foundation", "class": "slab" },
+      "basement": { "code": "BS0003", "label": "No Basement", "class": "none" },
+      "construction": { "code": null, "label": null }
+    },
+    "debt": {
+      "source": "mortgages",
+      "archived": false,
+      "balance": 218000,
+      "lien_count": 1,
+      "mortgages": []
+    }
+  }
 }
 ```
 
@@ -66,14 +95,27 @@ Wraps Realie via `core.properties` + cache refresh.
 
 **Hold onto `property_id`.** Every Phase 4 write tool (`forvex_save_deal`, `forvex_log_activity`) and the existing pipeline reads (`forvex_list_deals({ property_id })`) accept it directly. Pass it through instead of re-resolving the address.
 
+**Parcel facts (0.6.0) — read these, do not re-decode:**
+- `parcel` is **null** when there is no Realie cache. Fall back to the 0.5.0 keys (`last_sold_*`, `condition_estimate`), then ask.
+- Match on `code`; speak `label`. Never decode `TT####` / `TQ####` / `FN####` yourself.
+- **Debt dual-read (do not mix these up):**
+  - `recorded_lien_balance` is **liens-only**. Null when `liens[]` was omitted — that is *not* "$0 owed."
+  - Winning debt is `parcel.debt.balance`. Use it when `parcel.debt.source` is `liens` or `mortgages`.
+  - `archived_may_2026` is a frozen estimate — caveat it; do not treat it as a recorded payoff.
+  - `none` means unknown, **not zero**.
+- Last-sale flags (`arms_length`, `distressed`, `reo`, `buyer_entity`) are facts when present; null means the cache did not carry them (typical of flat v2 rows).
+- Physicals: speak `foundation.class` / `basement.class` / `garage.type`, not the raw code.
+
 **Behavior:**
 - If `arv_confidence` is `low`, set deal confidence to `partial` and ask user to confirm ARV.
 - If `condition_estimate` is `heavy` or `gut`, prompt user to confirm rehab scope before computing.
 - Prefer `estimated_arv` from this tool when confidence is `medium` or `high`; call `forvex_get_comps` for detail.
+- Prefer `parcel.debt.balance` over inventing payoff from `last_sold_price`.
 
 **Failure modes:**
 - Address not found → ask user for the basics (ARV, beds/baths, sqft)
 - API down → fall back to user-provided values; mark confidence `limited`
+- `parcel` null → proceed on 0.5.0 keys; do not invent last-sale flags or debt
 
 ---
 
@@ -101,6 +143,13 @@ RealIE comparables via recontrol comps v3 engine (`schema_version: "comps.v2"`).
 ```
 
 Optional: `forvex_get_comp_detail({ trace_id, include_comps: true })` for the full roster + exclusion reasons.
+
+**Exhibits / `comps[]` (0.6.0 additive — `comps.v2.1` unchanged):**
+- Keep raw `doc_type` for matching. Speak `doc.label` (e.g. quit claim). Do not decode `TT####` yourself.
+- `qualification` is a `{ code, label }` pair. `arms_length` is the engine's keep/drop read.
+- `sale_flags` `{ distressed, reo, foreclosure, company_buyer }` explains distress share — quote them, do not invent a second distress story.
+- `foundation` / `basement` carry `class` (slab, none, …). `garage_type` is already classified (`attached` / `detached` / …).
+- `subject.physical` is the **subject** garage/foundation/basement block (same shape as `parcel.physical`). It is not an exhibit row.
 
 **When to call:** In parallel with `forvex_get_property` on every new address.
 
@@ -238,6 +287,7 @@ Canonical deterministic underwriting execution.
 - Loads canonical comps, market intelligence, latest saved deal defaults, and buy-box server-side.
 - Accepts overrides such as `purchase_price`, `arv_override`, `rehab_override`, `strategy_focus`, and `calc_version`, while still honoring legacy explicit inputs when provided.
 - Returns verdict, best strategy, confidence, strategy matrix, MAOs, pre-offer, payoff estimate when available, plus `effective_input` and `server_context` metadata.
+- `server_context.property.parcel` is the same optional `parcel` object as `forvex_get_property`. Apply the same debt dual-read: winning debt is `parcel.debt.balance`, not `recorded_lien_balance`. Ignore unknown keys.
 
 **Important:** user-provided inputs still win over buy-box defaults.
 

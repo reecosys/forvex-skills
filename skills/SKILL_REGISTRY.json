@@ -1,5 +1,5 @@
 {
-  "mcp_min_version": "0.4.0",
+  "mcp_min_version": "0.6.0",
   "contract": "reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md",
   "platform_ref_visibility": {
     "_doc": "Visibility of each platform/references/*.md. 'public' may ship inside a demo-tier .skill, which anyone can download from a public release. 'internal' never leaves the Claude Teams workspace and may only be vendored into mcp-tier bundles. package.sh vendors exactly the refs a skill declares; lint-skills.py fails the build if a demo-tier skill declares an internal ref, or if a ref on disk is unclassified here.",

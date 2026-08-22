@@ -57,8 +57,9 @@ Stop after gathering narrative only; do not invent dollar totals.
 1. Ask for **address** (or `core_deal_id` if they already have one).
 2. Call `forvex_resolve_property` with **one** of: `address`, `property_id`, or `core_deal_id`.
 3. Present `attrs` (sqft, beds, baths, year_built) and `source` (`core_deal` vs `address`).
-4. If `eligible_deals` lists open deals at the same address, confirm which deal to link (prefer explicit `core_deal_id`).
-5. **Confirm on-site facts:** *"Record shows {beds}/{baths} / {sqft} sqft — does that match what you're seeing?"* Capture overrides for the project row only (not core.properties).
+4. When MCP is connected, also call `forvex_get_property` so optional `parcel.physical` is available (garage `type`, foundation `class`, basement `class`). Use those to seed Foundation / Interior questions. Do **not** invent foundation condition from year built, and do not assign a severity the user did not state.
+5. If `eligible_deals` lists open deals at the same address, confirm which deal to link (prefer explicit `core_deal_id`).
+6. **Confirm on-site facts:** *"Record shows {beds}/{baths} / {sqft} sqft — garage {type}, foundation {class}, basement {class}. Does that match what you're seeing?"* Capture overrides for the project row only (not core.properties).
 
 ### 2. Open or create REbuild project
 
@@ -95,7 +96,7 @@ Rules (see `references/category-severity.md`):
 
 - **Never invent** conditions the user did not state or strongly imply.
 - **Systems** = electrical + plumbing + HVAC together unless they split them.
-- **Foundation** — flag structural concerns; do not minimize.
+- **Foundation** — flag structural concerns; do not minimize. Prefill the *question* from `parcel.physical.foundation.class` (slab / crawl / basement) when present; still never invent a severity.
 - Use `None` when they explicitly say a zone needs no work (not "unknown").
 - Leave categories **unset** only when truly unknown — `forvex_get_missing_inputs` will ask.
 

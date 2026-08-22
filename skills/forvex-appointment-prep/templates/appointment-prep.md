@@ -16,7 +16,9 @@ Meeting: {MEETING_TIME_OR_TBD} · Prepared: {DATE}
 | Asking | ${ASKING} |
 | Rehab estimate | ${REHAB_LOW} – ${REHAB_HIGH} |
 | Beds / baths / sqft / year | {BED} / {BATH} / {SQFT} / {YEAR} |
+| Garage / foundation / basement | {GARAGE_TYPE} · {FOUNDATION_CLASS} · {BASEMENT_CLASS} |
 | Condition signals | {CONDITION_NOTES} |
+| Winning debt (source) | {DEBT_BALANCE_OR_UNKNOWN} ({DEBT_SOURCE}) |
 | Location type | {LOCATION_TYPE} |
 | Flood zone | {FLOOD_STATUS} |
 

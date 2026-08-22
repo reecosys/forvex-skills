@@ -107,7 +107,16 @@ Runs the comps engine on the **canonical** cache (1 mi / 18 mo), persists a `Com
   ],
   "exhibits": [
     { "id": "…", "address": "2520 Duncan St", "band": "rehabbed", "match_score": 78,
-      "sale_price": 92436, "adjusted_price": 95200, "likely_rehab": true }
+      "sale_price": 92436, "adjusted_price": 95200, "likely_rehab": true,
+      "doc_type": "TT0004",
+      "doc": { "code": "TT0004", "label": "Quit Claim Deed" },
+      "qualification": { "code": "TQ0002", "label": "Arm's-Length" },
+      "arms_length": true,
+      "sale_flags": { "distressed": true, "reo": true, "foreclosure": false, "company_buyer": false },
+      "garage_type": "attached",
+      "foundation": { "code": "FN0004", "label": "Concrete Slab Foundation", "class": "slab" },
+      "basement": { "code": "BS0003", "label": "No Basement", "class": "none" }
+    }
   ],
   "investor_signals": { "rehab_spread": 68000, "market_tightness": "balanced" },
   "trace_ref": { "id": "…", "url": "https://control.forvex.app/comps/…", "schema_version": "comps.v2" },
@@ -164,7 +173,9 @@ Runs the comps engine on the **canonical** cache (1 mi / 18 mo), persists a `Com
 
 ### `forvex_get_comp_detail(trace_id, include_comps?)`
 
-Full roster with `included`, `excluded_at_stage`, `exclude_reason`, real `band` / `match_score`. Use when the franchisee challenges the ARV.
+Full roster with `included`, `excluded_at_stage`, `exclude_reason`, real `band` / `match_score`. Use when the franchisee challenges the ARV. Same additive exhibit keys as `forvex_get_comps` (`doc`, `qualification`, `arms_length`, `sale_flags`, physicals).
+
+`subject.physical` (on `forvex_get_comps`) is the **subject** garage/foundation/basement block — not an exhibit row. Same shape as `forvex_get_property.parcel.physical`.
 
 ---
 
@@ -187,8 +198,12 @@ Full roster with `included`, `excluded_at_stage`, `exclude_reason`, real `band` 
 | Rerun hints | `brief.ai_guidance.rerun_triggers` → `subject_overrides` on `forvex_get_comps` |
 | Trust / liquidity | `signals` + `brief.ai_guidance.posture` |
 | Usable comp count | `funnel.selected` |
+| Exhibit deed (speak) | `exhibits[].doc.label` — keep raw `doc_type` for matching; never decode `TT####` yourself |
+| Exhibit sale quality | `exhibits[].arms_length` + `sale_flags` (`distressed`, `reo`, `foreclosure`, `company_buyer`) |
+| Subject physicals | `subject.physical` (garage type / foundation class / basement class) |
 | Deep link | `trace_ref.url` |
 | **Do not use** | Raw `arv.median` when `brief.consensus.preferred_read === "grid"` unless user overrides |
+| **Do not invent** | A second distress story when `sale_flags` already explain `funnel.distress_share` |
 | **Block offer ladder** | `brief.gates.block_offer` or `brief.ai_guidance.posture === "do_not_use"` |
 
 ---

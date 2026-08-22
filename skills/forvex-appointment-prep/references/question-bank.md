@@ -22,6 +22,26 @@ If the user gives partial info, proceed with what they have. Mark unknown fields
 
 ---
 
+## Record facts to confirm on-site (from `parcel`)
+
+These come from `forvex_get_property.parcel` (also on `forvex_underwrite.server_context.property.parcel`). They are **not** seller motivation. Use them to seed questions; never invent a flag the cache did not send.
+
+| When present | Confirm / ask |
+|---|---|
+| `last_sale.reo` or `distressed` true | "Was this an REO / distressed purchase — and is that still hanging over title?" |
+| `last_sale.arms_length` false | "How did they take title — family transfer, quit claim, or a market sale?" Speak `last_sale.deed.label`. |
+| `buyer_entity` is a company (not individual) | "Is the seller an entity? Who signs?" |
+| `debt.source` is `liens` or `mortgages` | Confirm `parcel.debt.balance` and lender as the payoff question. Do **not** treat null `recorded_lien_balance` as $0 owed. |
+| `debt.source` is `archived_may_2026` | "We only have an archived payoff estimate — what do they actually owe?" |
+| `debt.source` is `none` | Payoff is unknown. Ask. Do not invent it from `last_sold_price`. |
+| `physical.basement.class` is not `none` | "Finished / permitted basement? Walk it." |
+| `physical.foundation.class` | Note slab vs crawl vs basement on the red-flag list; do not invent structural condition. |
+| `physical.garage.type` | Confirm stall count vs record before using garage in the rehab/comp story. |
+
+Match on `code`; speak `label` / `class`. Null inners mean the cache lacked the fact (common on flat v2 rows).
+
+---
+
 ## Lead source taxonomy (Readvise)
 
 | Source | What it means | Typical motivation strength |
@@ -246,6 +266,7 @@ The brief picks 3–4 of these to lead with.
 ## Anti-patterns — never do these
 
 - Never use motivation signals to *manipulate* the seller. Surface them so the franchisee can be empathetic and accurate, not predatory.
+- Never treat a null `recorded_lien_balance` as "$0 owed." Winning debt is `parcel.debt.balance`. `none` means unknown.
 - Never invent a motivation signal because it would be convenient. If the franchisee said "I don't know anything about them," the brief reads "motivation not stated."
 - Never promise a probability band higher than the signals support.
 - Never recommend an opening offer above the MAO. Opening below MAO is fine; opening above breaks the buy-box.

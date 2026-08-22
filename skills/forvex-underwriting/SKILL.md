@@ -67,7 +67,7 @@ Do not treat `my-buy-box.md` as co-equal with server state during connected runs
 
 For normal connected runs, prefer the composite underwriting workflow first. Default call order:
 
-- `forvex_get_property(address)` to resolve the property and `property_id`
+- `forvex_get_property(address)` to resolve the property and `property_id`. Read optional `parcel` (winning debt, last-sale flags, physicals) per `references/platform/mcp-tools.md`. Do not decode Realie codes yourself.
 - `forvex_list_deals({ property_id })` to detect existing deal state on the same address
 - `forvex_underwrite(address, purchase_price?)` as the canonical server-side workflow
 - `forvex_get_flood_data(address)` and `forvex_get_market_intelligence(address)` only when you need supporting detail in the write-up
@@ -139,7 +139,7 @@ Use the template in `templates/deal-one-pager.md`. Structure:
 
 1. **Header** — Address, verdict (BUY / NEGOTIATE / PASS), best strategy, deal score
 2. **Badge row** — global badges from the script
-3. **Property block** — ARV, purchase, rehab, condition
+3. **Property block** — ARV, purchase, rehab, condition. When `server_context.property.parcel` is present: speak `last_sale.deed.label` / qualification; use `parcel.debt.balance` as winning debt (`liens` / `mortgages`). `archived_may_2026` is a caveat, not a recorded payoff. `none` or null `recorded_lien_balance` is unknown, **not $0**. Do not recompute payoff from `last_sold_price` when `parcel.debt` exists.
 4. **Strategy comparison table** — all six strategies, primary metric, secondary metric, score, buy-box fit
 5. **Recommended strategy** — one paragraph explaining the pick and why
 6. **Cost breakdown** — for the recommended strategy only (use `<details>` for the others to keep it scannable on mobile)

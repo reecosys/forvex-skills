@@ -67,6 +67,16 @@ If the user has indicated they prefer no emoji, drop the colored circle. Plain t
 
 Two-column tables read well on iPhone.
 
+When `server_context.property.parcel` (or `forvex_get_property.parcel`) is present, add rows rather than inventing a second property story:
+
+```
+| Last sale | Warranty Deed · Arm's-Length · yes |
+| Winning debt | $218,000 (mortgages) |
+| Physicals | attached · slab · none |
+```
+
+Match on `code`; speak `label` / `class`. Omit a row when that inner is null. Never treat null `recorded_lien_balance` as $0 owed.
+
 ---
 
 ## Strategy comparison table

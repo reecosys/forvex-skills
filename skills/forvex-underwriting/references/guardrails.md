@@ -153,6 +153,7 @@ Underwrite out-of-area **with coverage caveats, not a refusal**:
 - **Directional confidence.** Lean on the `confidence` label (limited / partial / full) to carry uncertainty — that is exactly what it is for. A thin out-of-area comp set means `partial`/`limited`, not "I can't tell you."
 - **No boots on the ground.** Add a one-line "remote read — not seen in person; condition/rehab are estimates, verify before hard offer" note. State it once; don't apologize repeatedly.
 - **Governed state law, not guesswork.** Render `server_context.state_rules.caveats` (the **State nuances** section — see `presentation.md`) for deed convention, disclosure regime, closing authority, and licensing. Do not freelance state specifics.
+- **Debt dual-read.** Winning debt is `server_context.property.parcel.debt.balance` when `source` is `liens` or `mortgages`. Null `recorded_lien_balance` is not $0 owed. Do not recompute payoff from last sale when `parcel.debt` exists.
 - **Coverage flags from the data.** Surface comp-thinness, rural exit-liquidity, and market-risk from `forvex_get_market_intelligence` / comp verdict — as flags that shape the read, not as reasons to decline.
 - **Say what would sharpen it.** If a local inspection / BPO / agent walk-through would materially change confidence, name that as the next step — after giving the number, not instead of it.
 

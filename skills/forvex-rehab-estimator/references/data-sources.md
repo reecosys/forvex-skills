@@ -24,7 +24,7 @@ Optional:
 - `forvex_map_observations_to_skus` — narrative → catalog SKUs (validated server-side)
 - `forvex_update_estimate` — replace line items on draft/derived estimate (blocked if status locked)
 
-Supporting property context (underwriting path): `forvex_get_property` still works for ARV/comps; prefer `forvex_resolve_property` for REbuild linkage.
+Supporting property context (underwriting path): `forvex_get_property` still works for ARV/comps and optional `parcel.physical` (garage type, foundation class, basement class). Prefer `forvex_resolve_property` for REbuild linkage. Speak `label` / `class`; do not decode Realie codes or invent foundation from year built.
 
 ---
 

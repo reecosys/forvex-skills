@@ -40,7 +40,7 @@ If forVEX tools error or do not resolve, treat MCP as down for this session and 
 
 **Step 2b — Server-first data pull (MCP live).** Read `references/platform/mcp-tools.md` for the canonical tool list. For appointment prep specifically, the priority calls are:
 
-- `forvex_get_property(address)` — resolve `property_id` and property fundamentals
+- `forvex_get_property(address)` — resolve `property_id` and property fundamentals. Read optional `parcel` (last-sale flags, physicals, winning debt) per `references/platform/mcp-tools.md`. Do not decode Realie codes yourself.
 - `forvex_list_deals({ property_id })` and `forvex_get_deal(id)` — only when an existing deal record exists for this address. When `forvex_get_deal` returns, read `readvise_property` (motivation, lead_source, lead_type, exit_strategy, financing) and `analysis.context` — these pre-fill seller context for step 3.
 - `forvex_underwrite(address, purchase_price?)` — canonical underwriting workflow; treat this as the source of truth for verdict, MAOs, pre-offer, confidence, and strategy comparison
 - `forvex_get_flood_data(address)` — flood zone status when you need explicit flood commentary
@@ -93,9 +93,10 @@ You do not need to render the full one-pager here. You need the verdict, recomme
 Use `templates/appointment-prep.md`. Structure:
 
 1. **Top of mind** — property + verdict + recommended strategy + **Pre-Offer Number** + MAO range + **math basis line** (posture, rate, hold, rehab, listing %, franchise fee). The math basis line is required per `references/platform/forvex-frame.md` — never omit it.
-2. **Property snapshot** — beds/baths/sqft/year, condition signals, comp-validated ARV range with confidence
+2. **Property snapshot** — beds/baths/sqft/year, condition signals, garage/foundation/basement **class** from `parcel.physical` (or `subject.physical` on comps) when present, comp-validated ARV range with confidence
 3. **Seller posture read** — what we know, what we infer, motivation signal strength (low/medium/high), probability of accepting an offer at MAO (rough)
-   - **Payoff estimate block** — render when `forvex_get_property` returned `last_sold_price` + `last_sold_date`. Pass these through to `forvex_underwrite` as `last_sold_price` and `last_sold_year`; use the `payoff_estimate` object from the result. Make payoff the #1 on-site question if estimated payoff > target offer.
+   - **Payoff estimate block** — prefer `parcel.debt` from `forvex_get_property` (same object on `forvex_underwrite.server_context.property.parcel`). Use `parcel.debt.balance` when `source` is `liens` or `mortgages`. Treat `archived_may_2026` as a weak estimate and say so. `none` or null `recorded_lien_balance` is **unknown, not $0 owed** — do not invent payoff from `last_sold_price` when winning debt exists. Still pass `last_sold_price` / `last_sold_year` into `forvex_underwrite` and render `payoff_estimate` when the engine returns it. Make payoff the #1 on-site question if estimated payoff > target offer.
+   - **Last-sale flags** — when `parcel.last_sale` is present, cite `deed.label` and flags (`distressed`, `reo`, `arms_length`, company/entity buyer). Null flags (typical of flat v2 rows) mean unknown — do not invent REO/distress. Use them to seed questions, not to invent seller motivation.
    - **Seller's math (hold-cost comparison) block** — render for motivations `relocation`, `financial_distress`, `inherited`, `landlord_burnout`. Compares your offer (net now) vs. their probable retail path (net later). Use: their expected resale × 0.94 (6% commission) − ($1,800–2,200/mo × expected DOM months) − payoff = "hold net." Compare to "now net" = your target offer − payoff − ~$3K closing. Surface the gap as the calibrated question.
 4. **Offer ladder** — Pre-Offer Number (walk-in), opening, target, walkaway, with rationale
    - **Cash overlay block** — render when `lender_ltv_cap` was passed and `cash_overlay.max_overlay > 0`. Show overlay by strategy at the target offer. Warn that the overlay above the cap line is franchisee cash, not financed.
