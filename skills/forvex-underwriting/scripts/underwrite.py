@@ -29,7 +29,7 @@ import sys
 from typing import Any
 
 
-__version__ = "0.4.0"  # Adds lender_ltv_cap / cash_overlay / payoff_estimate / per-franchisee hm_rate+hm_points.
+__version__ = "0.5.0"  # Defaults missing rent to 1% of ARV; echoes rent_source.
 
 
 # ---------- Defaults (mirror references/assumptions.md) ----------
@@ -646,18 +646,31 @@ def calc_wholesale(inputs: dict) -> dict:
 
 # ---------- Strategy: Rental ----------
 
+RENT_SOURCES = ("request", "latest_deal", "rentometer", "arv_1pct")
+
+
+def default_rent_from_arv(arv) -> int:
+    return round(float(arv) * 0.01)
+
+
+def resolve_rent(inputs: dict) -> tuple:
+    rent = inputs.get("rent")
+    if rent:
+        source = inputs.get("rent_source")
+        if source not in RENT_SOURCES:
+            source = "request"
+        defaulted = source in ("rentometer", "arv_1pct")
+        return rent, defaulted, source
+    return default_rent_from_arv(inputs["arv"]), True, "arv_1pct"
+
+
 def calc_rental(inputs: dict) -> dict:
     purchase = inputs["purchase"]
     full_rehab = inputs.get("rehab", 0)
     # Rentals only need rent-ready condition, not retail-grade finish.
     # Use partial_rehab (defaults to 55% of full, same rule as wholetail).
     rehab = inputs.get("partial_rehab", round(full_rehab * 0.55))
-    rent = inputs.get("rent")
-    if not rent:
-        rent = round(purchase * 0.01)
-        rent_was_defaulted = True
-    else:
-        rent_was_defaulted = False
+    rent, rent_was_defaulted, rent_source = resolve_rent(inputs)
 
     down_pct = inputs.get("down_payment_pct", DEFAULTS["down_payment_pct"])
     loan_rate = inputs.get("loan_rate", DEFAULTS["loan_rate"])
@@ -718,6 +731,7 @@ def calc_rental(inputs: dict) -> dict:
         "strategy": "rental",
         "rent_used": rent,
         "rent_was_defaulted": rent_was_defaulted,
+        "rent_source": rent_source,
         "rehab_used": rehab,
         "rehab_ref": full_rehab,
         "loan_amount": round(loan_amount, 2),
@@ -760,12 +774,7 @@ def calc_brrrr(inputs: dict) -> dict:
     purchase = inputs["purchase"]
     arv = inputs["arv"]
     rehab = inputs["rehab"]
-    rent = inputs.get("rent")
-    if not rent:
-        rent = round(purchase * 0.01)
-        rent_was_defaulted = True
-    else:
-        rent_was_defaulted = False
+    rent, rent_was_defaulted, rent_source = resolve_rent(inputs)
 
     posture = inputs.get("brrrr_posture", DEFAULTS["brrrr_holding_posture"])
     stabilization_months = inputs.get("brrrr_stabilization_months",
@@ -831,6 +840,7 @@ def calc_brrrr(inputs: dict) -> dict:
         "strategy": "brrrr",
         "rent_used": rent,
         "rent_was_defaulted": rent_was_defaulted,
+        "rent_source": rent_source,
         "stabilization_months": stabilization_months,
         "phase1_initial_investment": round(cash_in_initial, 2),
         "phase1_breakdown": {
@@ -1099,6 +1109,11 @@ def compute_confidence(inputs: dict) -> str:
     if not have_all:
         return "limited"
     if not inputs.get("rent"):
+        return "partial"
+    source = inputs.get("rent_source")
+    if source not in RENT_SOURCES:
+        source = "request"
+    if source in ("rentometer", "arv_1pct"):
         return "partial"
     return "full"
 
@@ -1397,6 +1412,7 @@ def underwrite(inputs: dict) -> dict:
             "rehab": rehab,
             "rent": rental["rent_used"],
             "rent_defaulted": rental["rent_was_defaulted"],
+            "rent_source": rental["rent_source"],
             "posture": inputs.get("posture", "hard_money"),
             "franchise_level": level,
             "franchise_type": ftype,

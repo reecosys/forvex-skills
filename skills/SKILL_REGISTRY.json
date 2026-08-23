@@ -1,5 +1,9 @@
 {
   "mcp_min_version": "0.6.0",
+  "calc_version": {
+    "_doc": "Pinned calc_version of each skill's deterministic engine script. mcp_min_version gates the TOOL SCHEMA (the wire shape); this gates CALC BEHAVIOR, which changes without any schema change and is therefore invisible to mcp_min_version. lint-skills.py fails the build if a pin disagrees with __version__ in the script, and the CI parity job fails if the script disagrees with recontrol's authoritative lib/mcp/underwrite/nativeEngine.ts. Bump both together.",
+    "forvex-underwriting": "0.5.0"
+  },
   "contract": "reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md",
   "platform_ref_visibility": {
     "_doc": "Visibility of each platform/references/*.md. 'public' may ship inside a demo-tier .skill, which anyone can download from a public release. 'internal' never leaves the Claude Teams workspace and may only be vendored into mcp-tier bundles. package.sh vendors exactly the refs a skill declares; lint-skills.py fails the build if a demo-tier skill declares an internal ref, or if a ref on disk is unclassified here.",
