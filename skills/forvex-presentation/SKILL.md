@@ -1,19 +1,20 @@
 ---
 name: forvex-presentation
-description: Render an already-analyzed forVEX deal, or a seller appointment that just happened, into a richer artifact — interactive HTML dashboard with charts, a 5-slide deal deck, a print-ready PDF one-pager, an internal deal sheet, or an appointment debrief. Use when the user asks "render this as a dashboard", "make this a slide deck", "give me a PDF", "show me this visually", "wrap up the appointment", "debrief that meeting", "what happened at the appointment", or "appointment recap". Does NOT re-run the math — reads the existing analysis from conversation context or saved MCP analysis, and the appointment from the operator's own recount.
+description: Render an already-analyzed forVEX deal, or a seller appointment that just happened, into a richer artifact — interactive HTML dashboard with charts, a 5-slide deal deck, a print-ready PDF one-pager, an internal deal sheet, an appointment debrief, or a rehab scope sheet. Use when the user asks "render this as a dashboard", "make this a slide deck", "give me a PDF", "show me this visually", "wrap up the appointment", "debrief that meeting", "what happened at the appointment", "appointment recap", "render the rehab scope", or "show me the estimate breakdown". Does NOT re-run the math — reads the existing analysis from conversation context or saved MCP analysis, and the appointment from the operator's own recount.
 ---
 
 > **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
 
 # forVEX Presentation — Rich Artifact Rendering
 
-You take something that already happened — a completed deal analysis (from `forvex-underwriting` earlier in the conversation or from a saved MCP deal analysis), or a seller appointment the operator just walked out of — and render it as a richer artifact. You do not re-run the math. You do not change any numbers. You do not reconstruct events you weren't told about. You re-format what's already there into a more visual deliverable.
+You take something that already happened — a completed deal analysis (from `forvex-underwriting` earlier in the conversation or from a saved MCP deal analysis), a seller appointment the operator just walked out of, or a saved REbuild rehab estimate — and render it as a richer artifact. You do not re-run the math. You do not change any numbers. You do not reconstruct events you weren't told about. You re-format what's already there into a more visual deliverable.
 
 > **Status:** Phase 6 — **complete.** Built and production-ready: Mode 1 (Dashboard),
 > Mode 2 (Slide deck), Mode 3 (Printable PDF), Mode 4 (Internal deal sheet —
-> operator/confidential, strategy-aware), and Mode 5 (Appointment debrief —
-> operator/confidential, renders the conversation rather than the economics).
-> See `references/`.
+> operator/confidential, strategy-aware), Mode 5 (Appointment debrief —
+> operator/confidential, renders the conversation rather than the economics),
+> and Mode 6 (Rehab scope — renders a REbuild estimate reconciled against the
+> walkthrough). See `references/`.
 
 ## When to invoke
 
@@ -24,6 +25,7 @@ You take something that already happened — a completed deal analysis (from `fo
 - "Wrap up the appointment" / "debrief that meeting" / "appointment recap"
 - After a deal analysis, when the user wants something more than markdown
 - After a seller appointment, when the user narrates how it went (Mode 5)
+- "Render the rehab scope" / "show me the estimate breakdown" / "does this estimate match what we saw?" (Mode 6)
 
 ## Required input — per mode
 
@@ -46,6 +48,15 @@ franchisee can debrief a walk-through on a property they have not underwritten.
 If the user asks for a debrief without telling you how the appointment went:
 - Ask for it. Do not reconstruct an appointment from property data — the whole
   value of this artifact is that it records what actually happened in the room.
+
+**Mode 6 (rehab scope)** needs a **saved REbuild estimate** — load it with
+`forvex_get_estimate`. Walkthrough observations are optional but are what make
+the artifact worth rendering: with them you get the reconciliation block, without
+them you render the estimate and state plainly that it is unreconciled.
+
+If there's no saved estimate:
+- Refuse and route: "There's no saved estimate on this project yet. Run
+  `forvex-rehab-estimator` to draft one, then ask me to render it."
 
 ## Render modes
 
@@ -214,6 +225,69 @@ and this skill does not write (see *What this skill does NOT do*). Offer them:
 
 Say what you'd log and let the user confirm; don't log silently.
 
+### Mode 6 — Rehab scope  *(built)*
+
+Renders a saved **REbuild estimate** and reconciles it against what the operator
+actually saw on site. The engine never walked the house; the operator did. That
+gap is the reason this mode exists — it is the only artifact in the system that
+crosses a REbuild estimate with REdeal walkthrough facts.
+
+Sections: header slab (property · estimate revision · **lock chip** · total ·
+$/sf · contingency) · The read · **Where the money goes** (category weight bars)
+· **Estimate vs. what we saw** (the reconciliation, the signature block) ·
+operator-lane vs fallback scope cards · what survives in the operator lane ·
+**Not in this scope** (exclusions) · full line-item table with SKUs · what to
+verify before this becomes a build budget.
+
+**Workflow:**
+
+1. Read `references/style-guide.md` and `references/rehab-scope-template.html`
+   (tokens, repeatable blocks, and the numbers-discipline note in its comment).
+2. Load the estimate with `forvex_get_estimate`. Every dollar figure comes from
+   it verbatim — see *The one rule* and *Numbers discipline* below.
+3. Fill `CAT_ROWS`, `REC_ROWS`, `LANE_ITEMS`, `EXCLUSIONS`, `LI_SECTION` /
+   `LI_ROW`, `NEXT_CHECKS`. Each `NEXT_CHECKS` item resolves a flagged or
+   missing line from the reconciliation.
+4. **Do not write to the estimate.** Render, then offer the handoff (below).
+5. Output one self-contained artifact. Keep the "Internal · Confidential" tag
+   and the provenance footer.
+
+**The one rule — reconcile against observations, never against the price book.**
+
+Every reconciliation row must cite a **stated observation** ("the family said
+both AC units were already replaced"). You flag that a line may not be *needed*.
+You never argue a line is priced *wrong* — unit costs, category rates and the
+engine total are the engine's authority, full stop. No observation, no flag.
+
+This is what keeps Mode 6 compatible with `forvex-project-status`, which is
+forbidden from editorializing on an estimate at all. Status reports the numbers;
+Mode 6 reports the numbers **against the visit**. If you have no walkthrough
+observations, drop the reconciliation block and say the estimate is unreconciled
+— do not invent what was seen.
+
+**Numbers discipline** (the template's comment carries the full list):
+
+- Never recompute, re-derive or round a total. `forvex_get_estimate` is the
+  source; `forvex-project-status`'s "never recompute" rule applies here too.
+- A figure shown twice must be **byte-identical** in both places. A scope card
+  reading `~$10,000` above a detail block reading `$9,057` is a defect.
+- Category **bar widths are share of subtotal** — the same denominator as the
+  percentage label beside them, so bar and number agree.
+- Any figure **not** from the engine (a roof range, a market quote) is marked
+  `class="outside"` and named in `{{OUTSIDE_NOTE}}`. An operator's guess must
+  never inherit price-book authority.
+- When reconciliation rows carry flags, `{{CONTINGENCY_NOTE}}` **must** comment
+  on whether the contingency covers the exposure. A 5% contingency against 30%
+  of the budget in question is a finding, not a footnote.
+- **No deal economics here.** Resale %, ARV, margin and hold belong to the deal
+  one-pager. Reference it; don't restate it.
+
+**After rendering — hand off, don't write.** Same rule as Mode 5:
+
+- scope or dollar changes → **`forvex-change-order`** (refused on a locked
+  estimate — the lock chip tells you before you try)
+- progress notes with no scope change → **`forvex-project-update`**
+
 ## Output
 
 The skill always produces a **single self-contained HTML artifact** (no external dependencies beyond CDN-loaded chart libraries). Claude renders it inline.
@@ -239,6 +313,10 @@ The **appointment debrief** (Mode 5) is stricter still — it is operator-eyes-o
 and must never be published as a shareable link. See Mode 5's confidentiality
 rules.
 
+The **rehab scope** (Mode 6) is internal too: it carries cost basis, the operator
+lane, and scope no seller has agreed to. It is **not a contractor bid** — don't
+let it be handed to a trade as one.
+
 ## Before vs. after the appointment
 
 Don't confuse the two ends of an appointment:
@@ -252,6 +330,24 @@ Don't confuse the two ends of an appointment:
 
 `forvex-appointment-prep` produces a *prep brief*; Mode 5 produces a *debrief*.
 Same appointment, opposite ends.
+
+## Rendering a REbuild estimate (Mode 6) vs. checking one
+
+This skill lives in the REdeal lane but Mode 6 renders a REbuild artifact. Keep
+the boundary clean:
+
+| The user wants | Skill |
+|---|---|
+| A fast read on project state — total, variance, lock, recent activity | **`forvex-project-status`** (read-only, **never editorializes**) |
+| The estimate rendered, and reconciled against what they saw on site | **Mode 6 here** |
+| To change scope or dollars | **`forvex-change-order`** |
+| To log progress with no scope change | **`forvex-project-update`** |
+| To draft a new estimate | **`forvex-rehab-estimator`** |
+
+`forvex-project-status` is explicitly barred from commenting on whether a rehab
+is too high, too low, or misallocated. Mode 6 is not a way around that rule — it
+earns its commentary by citing **observations from the visit**, never by
+disagreeing with the price book. See *The one rule* under Mode 6.
 
 ## What this skill does NOT do
 
@@ -278,3 +374,4 @@ Same appointment, opposite ends.
 - `references/chart-recipes.md` — which Chart.js config for which chart type ✅ **built**
 - `references/deck-template.html` — 5-slide deck (nav + print) ✅ **built**
 - `references/appointment-debrief-template.html` — appointment debrief, operator/confidential ✅ **built**
+- `references/rehab-scope-template.html` — REbuild estimate + walkthrough reconciliation, operator/confidential ✅ **built**

@@ -149,8 +149,8 @@
       "lane": "redeal",
       "tier": "mcp",
       "writes": [],
-      "reads": ["forvex_get_deal", "forvex_get_property"],
-      "handoffs": ["forvex-activity-log", "forvex-deal-disposition"],
+      "reads": ["forvex_get_deal", "forvex_get_property", "forvex_get_estimate"],
+      "handoffs": ["forvex-activity-log", "forvex-deal-disposition", "forvex-change-order", "forvex-project-update"],
       "platform_refs": ["skill-routing"]
     },
     "forvex-project-status": {
@@ -158,7 +158,7 @@
       "tier": "mcp",
       "writes": [],
       "reads": ["forvex_resolve_property", "forvex_list_deals", "forvex_get_estimate", "forvex_get_workspace_context"],
-      "handoffs": ["forvex-change-order", "forvex-project-update"],
+      "handoffs": ["forvex-change-order", "forvex-project-update", "forvex-presentation"],
       "platform_refs": ["resolve-context", "skill-routing"]
     },
     "forvex-project-update": {

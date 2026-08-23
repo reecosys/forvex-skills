@@ -1,7 +1,7 @@
 # forVEX Presentation — Style Guide
 
 The visual vocabulary for **operator-facing** rendered artifacts (dashboard,
-deck, PDF one-pager, internal deal sheet, appointment debrief). Keep it consistent across all render modes and all
+deck, PDF one-pager, internal deal sheet, appointment debrief, rehab scope). Keep it consistent across all render modes and all
 franchisees so a forVEX deal artifact is instantly recognizable.
 
 > **Audience reminder.** These artifacts are the **operator's** view — they show
@@ -36,6 +36,10 @@ a luxury editorial sheet (that's the buyer side). Think dashboard, not brochure.
   --yes:var(--buy);         --yes-bg:var(--buy-bg);
   --maybe:var(--negotiate); --maybe-bg:var(--negotiate-bg);
   --unknown:#6B6862;        --unknown-bg:#F0EDE7;
+  /* scope status (rehab scope) — ALIASES, never new hex */
+  --ok:var(--buy);          --ok-bg:var(--buy-bg);
+  --warn:var(--negotiate);  --warn-bg:var(--negotiate-bg);
+  --bad:var(--pass);        --bad-bg:var(--pass-bg);
 }
 ```
 
@@ -112,6 +116,16 @@ on every repeated item (`.person`, `.obj`, `.act`, rows) — not just on cards.
   account numbers, or medical detail beyond what bears on the transaction.
 - **Dates carry the year, one format throughout** ("Aug 25, 2026"). Mixed or
   bare-month dates on a record read weeks later are a real failure mode.
+- **A figure shown twice is byte-identical in both places.** A headline reading
+  `~$10,000` above a detail block reading `$9,057` destroys trust in every other
+  number on the page. Round once, at the source, or not at all.
+- **A bar's width and its label share a denominator.** If the label says a
+  category is 14% of the budget, the bar is 14% filled — never normalized to the
+  largest category while the label reads share-of-total. Dual encodings that
+  disagree are worse than no bar.
+- **Figures that did not come from the engine are marked and named.** An
+  operator's roof range rendered in the same type as a price-book line launders a
+  guess into authority. Mark it (`class="outside"`) and say where it came from.
 - **Internal deal sheet (Mode 4):** same forVEX Edge identity, plus a confidential
   red tag (`--confidential:#B91C1C`) in the kicker and a dark ink economics card.
   It is operator/confidential and shows cost basis + fee — keep the "Internal ·

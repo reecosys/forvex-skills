@@ -112,8 +112,23 @@ If the user asks "show me the line items" or "what's the breakdown":
 
 - `references/platform/resolve-context.md` — address → deal/project resolution (shared)
 
+## Rendering it as an artifact
+
+When the franchisee wants the estimate as something to look at rather than read
+in chat — "render the rehab scope", "show me the estimate breakdown", "does this
+estimate match what we saw?" — route to **`forvex-presentation` Mode 6 — Rehab
+scope**. It renders the categories, the line items with SKUs, the operator-lane
+vs fallback scopes, and reconciles the estimate against the walkthrough.
+
+**This is not a way around the no-editorializing rule above.** Mode 6 may flag
+that a line looks unnecessary *only* by citing a stated observation from the
+visit ("the family said both AC units were replaced"). It may never argue a line
+is priced wrong — unit costs and the engine total stay the engine's authority,
+here and there.
+
 ## Related skills
 
+- **forvex-presentation** (Mode 6) — render the estimate as a scope artifact
 - **forvex-rehab-estimator** — draft a new estimate or substantially revise one
 - **forvex-change-order** — delta updates (add a line, change a severity)
 - **forvex-project-update** — log progress notes on the project timeline
