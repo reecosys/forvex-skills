@@ -86,7 +86,7 @@
         "forvex_get_comp_detail",
         "forvex_get_rent_estimate"
       ],
-      "handoffs": ["forvex-underwriting", "forvex-deal-disposition", "forvex-activity-log"],
+      "handoffs": ["forvex-underwriting", "forvex-deal-disposition", "forvex-activity-log", "forvex-presentation"],
       "platform_refs": ["mcp-tools", "forvex-frame", "comp-evaluation", "skill-routing", "write-discipline"]
     },
     "forvex-change-order": {
@@ -150,7 +150,7 @@
       "tier": "mcp",
       "writes": [],
       "reads": ["forvex_get_deal", "forvex_get_property"],
-      "handoffs": [],
+      "handoffs": ["forvex-activity-log", "forvex-deal-disposition"],
       "platform_refs": ["skill-routing"]
     },
     "forvex-project-status": {

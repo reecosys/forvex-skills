@@ -1,17 +1,19 @@
 ---
 name: forvex-presentation
-description: Render an already-analyzed forVEX deal into a richer artifact format — interactive HTML dashboard with charts, a 5-slide deal deck, or a print-ready PDF one-pager. Use when the user asks "render this as a dashboard", "make this a slide deck", "give me a PDF", "show me this visually", or wants to share the analysis with a buyer/partner. Does NOT re-run the math — reads the existing analysis from conversation context or saved MCP analysis.
+description: Render an already-analyzed forVEX deal, or a seller appointment that just happened, into a richer artifact — interactive HTML dashboard with charts, a 5-slide deal deck, a print-ready PDF one-pager, an internal deal sheet, or an appointment debrief. Use when the user asks "render this as a dashboard", "make this a slide deck", "give me a PDF", "show me this visually", "wrap up the appointment", "debrief that meeting", "what happened at the appointment", or "appointment recap". Does NOT re-run the math — reads the existing analysis from conversation context or saved MCP analysis, and the appointment from the operator's own recount.
 ---
 
 > **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
 
 # forVEX Presentation — Rich Artifact Rendering
 
-You take an already-completed deal analysis (from `forvex-underwriting` earlier in the conversation or from a saved MCP deal analysis) and render it as a richer artifact. You do not re-run the math. You do not change any numbers. You re-format what's already there into a more visual deliverable.
+You take something that already happened — a completed deal analysis (from `forvex-underwriting` earlier in the conversation or from a saved MCP deal analysis), or a seller appointment the operator just walked out of — and render it as a richer artifact. You do not re-run the math. You do not change any numbers. You do not reconstruct events you weren't told about. You re-format what's already there into a more visual deliverable.
 
 > **Status:** Phase 6 — **complete.** Built and production-ready: Mode 1 (Dashboard),
-> Mode 2 (Slide deck), Mode 3 (Printable PDF), and Mode 4 (Internal deal sheet —
-> operator/confidential, strategy-aware). See `references/`.
+> Mode 2 (Slide deck), Mode 3 (Printable PDF), Mode 4 (Internal deal sheet —
+> operator/confidential, strategy-aware), and Mode 5 (Appointment debrief —
+> operator/confidential, renders the conversation rather than the economics).
+> See `references/`.
 
 ## When to invoke
 
@@ -19,11 +21,14 @@ You take an already-completed deal analysis (from `forvex-underwriting` earlier 
 - "Make a slide deck for this deal"
 - "Give me a PDF I can share with [buyer / capital partner / spouse]"
 - "Show me a chart of the sensitivity"
+- "Wrap up the appointment" / "debrief that meeting" / "appointment recap"
 - After a deal analysis, when the user wants something more than markdown
+- After a seller appointment, when the user narrates how it went (Mode 5)
 
-## Required prerequisite
+## Required input — per mode
 
-There must be a completed underwriting analysis in the conversation context or available from MCP. Preferred sources:
+**Modes 1–4 (economics artifacts)** need a completed underwriting analysis in the
+conversation context or available from MCP. Preferred sources:
 
 - conversation context from `forvex-underwriting`
 - `forvex://deal/{deal_id}/analysis`
@@ -31,6 +36,16 @@ There must be a completed underwriting analysis in the conversation context or a
 
 If there isn't an existing analysis to read:
 - Refuse: "I render existing analyses into rich formats. Run `forvex-underwriting` on a property first, or load a saved deal analysis, then ask me to render it."
+
+**Mode 5 (appointment debrief)** is different: its input is the **operator's
+recount of the appointment** — who was there, what was said, what was offered,
+what happens next. An underwriting analysis is *optional* garnish that fills the
+numbers strip; without one, drop that block and render the debrief anyway. A
+franchisee can debrief a walk-through on a property they have not underwritten.
+
+If the user asks for a debrief without telling you how the appointment went:
+- Ask for it. Do not reconstruct an appointment from property data — the whole
+  value of this artifact is that it records what actually happened in the room.
 
 ## Render modes
 
@@ -142,6 +157,63 @@ table, and **risk flags + numbered next steps**.
 4. Output one self-contained artifact. Keep the "Internal · Confidential" kicker
    and the internal disclaimer footer — this sheet carries cost basis and fee.
 
+### Mode 5 — Appointment debrief  *(built)*
+
+The **after** bookend to `forvex-appointment-prep`. Modes 1–4 render the deal's
+**economics**; this renders the **conversation** — who has to say yes, what they
+pushed back on, how the hour went, what we learned on site, where the deal
+honestly stands, and what happens next. Mobile-first (it gets read in a truck),
+prints clean, operator/**confidential**.
+
+Sections: header slab (address · attendees · who ran it · offer made · where it
+stands · **next touch**) · The read (two paragraphs) · **Who has to say yes**
+(the decision-map spine with stance dots) · Objections (each with an
+open/partly/handled chip) · How the hour went (timeline) · What we learned ·
+Where this actually stands · Next actions (checkbox, owner, when) · optional
+numbers strip with a **mandatory** confidence line.
+
+**Workflow:**
+
+1. Read `references/style-guide.md` and `references/appointment-debrief-template.html`
+   (token list, repeatable blocks, and the voice note in its top comment).
+2. Fill from the operator's recount, not from property data:
+   - `PEOPLE_ROWS` — one `.person` per decision-maker, stance
+     `yes|maybe|swing|unknown`. Mark the **swing vote** (the person who decides
+     on paper without having met you) — naming it is the point of the block.
+     **One person is a valid decision map**; never invent a spine to fill it.
+   - `OBJECTIONS` — what they actually said, how it was met, and an honest
+     status chip. "Defused, not closed" is a real answer; prefer it to a
+     flattering one. Drop the whole block if nothing was raised.
+   - `TIMELINE`, `LEARNED` — condition facts, cost surprises, and any **play
+     change** (e.g. retail flip → wholetail).
+   - `NEXT_ACTIONS` — each one closes a named unknown, with an owner and a date.
+     If an action doesn't close an unknown, it is a chore; leave it out.
+   - Numbers strip + confidence line: **both or neither.** Only when a saved
+     analysis exists, and never re-derived here.
+3. **Do not write to the deal.** Render, then offer the handoff (below).
+4. Output one self-contained artifact. Keep the "Internal · Confidential" tag
+   and the disclaimer footer.
+
+**Confidentiality — stricter than Mode 4.** This artifact carries named third
+parties, their family and financial situation, and our own negotiation posture
+("don't counter unprompted", "let the expiry pass quietly"). Leaked to the
+seller it does more damage than a cost basis would.
+
+- Render it **inline**, or save it locally. **Never publish it as a shareable
+  artifact URL.**
+- First names and roles only. Never DOB, SSN, account numbers, or medical detail
+  beyond what bears on the transaction.
+- Never hand it to a seller, an heir, an agent, or a buyer.
+
+**After rendering — hand off, don't write.** A debrief naturally produces writes,
+and this skill does not write (see *What this skill does NOT do*). Offer them:
+
+- the touch itself → **`forvex-activity-log`** (`forvex_log_activity`)
+- a pipeline move the appointment caused, e.g. LEAD → OFFER →
+  **`forvex-deal-disposition`** (`forvex_update_deal_disposition`)
+
+Say what you'd log and let the user confirm; don't log silently.
+
 ## Output
 
 The skill always produces a **single self-contained HTML artifact** (no external dependencies beyond CDN-loaded chart libraries). Claude renders it inline.
@@ -163,10 +235,30 @@ it deliberately shows the suppressed numbers (cost basis, spread, fee, buy-box,
 score) for internal use. Keep the two straight: buyer → `forvex-wholesale-sheet`;
 internal/desk/partner → Mode 4 here.
 
+The **appointment debrief** (Mode 5) is stricter still — it is operator-eyes-only
+and must never be published as a shareable link. See Mode 5's confidentiality
+rules.
+
+## Before vs. after the appointment
+
+Don't confuse the two ends of an appointment:
+
+| The user wants | Skill |
+|---|---|
+| To walk into a meeting prepared — numbers, offer range, seller posture, questions | **`forvex-appointment-prep`** |
+| To capture a meeting that already happened — decision map, objections, next actions | **Mode 5 here** |
+| To log the touch on the deal timeline | **`forvex-activity-log`** |
+| To move the deal's pipeline status | **`forvex-deal-disposition`** |
+
+`forvex-appointment-prep` produces a *prep brief*; Mode 5 produces a *debrief*.
+Same appointment, opposite ends.
+
 ## What this skill does NOT do
 
 - Does not re-run the math
 - Does not pull new data
+- Does not write to the deal — no activity logs, no disposition moves, no saved
+  analyses. It renders and then hands off (see Mode 5)
 - Does not produce actual PDFs or PPTX files — it produces HTML that can be saved/printed/screen-captured into those formats
 - Does not invent visualizations beyond the modes listed above (keep the visual vocabulary consistent across all franchisees' decks)
 
@@ -185,3 +277,4 @@ internal/desk/partner → Mode 4 here.
 - `references/dashboard-template.html` — interactive Chart.js dashboard ✅ **built**
 - `references/chart-recipes.md` — which Chart.js config for which chart type ✅ **built**
 - `references/deck-template.html` — 5-slide deck (nav + print) ✅ **built**
+- `references/appointment-debrief-template.html` — appointment debrief, operator/confidential ✅ **built**

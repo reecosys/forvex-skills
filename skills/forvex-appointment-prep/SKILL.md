@@ -216,6 +216,19 @@ Two ways the repair estimate gets set:
 
 The Pre-Offer is purchase-only and intentionally simpler than the underwriting MAO (which accounts for all fees, financing, holding). Show **both**: the Pre-Offer as the napkin number the franchisee trusts, the MAO as the precise per-strategy ceiling. They should be in the same ballpark; if the Pre-Offer is far above the MAO, flag it.
 
+## After the appointment — hand off to the debrief
+
+This skill covers the **before**. When the franchisee comes back and narrates how
+it went ("wrap up the appointment", "here's what happened at 8003 Candleglow",
+"debrief that meeting"), route to **`forvex-presentation` Mode 5 — Appointment
+debrief**. It renders the conversation: who has to say yes, what they objected
+to, how the hour went, where the deal honestly stands, and the next actions.
+
+Prep brief in, debrief out. Then:
+
+- the touch itself → `forvex-activity-log`
+- a pipeline move the appointment caused (LEAD → OFFER) → `forvex-deal-disposition`
+
 ## Reference files
 
 - `references/question-bank.md` — seller-context questions and motivation signal taxonomy
