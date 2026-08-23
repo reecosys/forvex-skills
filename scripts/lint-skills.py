@@ -18,6 +18,7 @@ CROSS_SKILL_RE = re.compile(r"\.\./(?:forvex|readvise)-[a-z0-9-]+/")
 PLATFORM_REF_USE_RE = re.compile(r"references/platform/([a-z0-9-]+)\.md")
 TOOL_RE = re.compile(r"\b((?:forvex|readvise)_[a-z0-9_]+)\b")
 FRONTMATTER_RE = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
+ENGINE_VERSION_RE = re.compile(r'^__version__\s*=\s*["\']([^"\']+)["\']', re.M)
 
 
 def load_json(path: Path) -> dict:
@@ -161,6 +162,43 @@ def lint() -> int:
                 f"{skill_id}: references/platform/{ref}.md used in markdown but not declared "
                 f"in platform_refs — it will be missing from the packaged .skill"
             )
+
+    # calc_version pins — a skill's deterministic engine script carries calc
+    # behavior that mcp_min_version cannot see (the wire shape can be identical
+    # while the numbers change). Keep the pin and the script in lockstep so a
+    # silent calc drift fails the build instead of shipping.
+    calc_pins = registry.get("calc_version", {})
+    if not isinstance(calc_pins, dict):
+        errors.append("SKILL_REGISTRY.json 'calc_version' must be an object of skill_id -> version")
+        calc_pins = {}
+    for skill_id, pinned in calc_pins.items():
+        if skill_id.startswith("_"):
+            continue
+        if skill_id not in registry_skills:
+            errors.append(f"calc_version pins unknown skill: {skill_id}")
+            continue
+        versioned = {}
+        for script in sorted((SKILLS_DIR / skill_id / "scripts").glob("*.py")):
+            m = ENGINE_VERSION_RE.search(script.read_text(encoding="utf-8"))
+            if m:
+                versioned[script.name] = m.group(1)
+        if not versioned:
+            errors.append(
+                f"{skill_id}: calc_version pinned to {pinned} but no scripts/*.py declares __version__"
+            )
+        elif len(versioned) > 1:
+            errors.append(
+                f"{skill_id}: multiple scripts declare __version__ ({sorted(versioned)}) — "
+                f"cannot resolve which one calc_version pins"
+            )
+        else:
+            script_name, actual = next(iter(versioned.items()))
+            if actual != pinned:
+                errors.append(
+                    f"{skill_id}: calc_version pin is {pinned!r} but scripts/{script_name} "
+                    f"declares __version__ = {actual!r}. A calc-behavior change must bump both "
+                    f"(and stay in parity with recontrol nativeEngine.ts)."
+                )
 
     # Bundle membership
     bundled: set[str] = set()
