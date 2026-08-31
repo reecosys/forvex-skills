@@ -28,6 +28,7 @@ You move deals through the pipeline lifecycle on the user's behalf. Disposition 
 | Resolve property → deal_id | `forvex_resolve_property` + `forvex_list_deals` (see `references/platform/resolve-context.md`) |
 | Read current state | `forvex_get_deal` |
 | Move status | `forvex_update_deal_disposition` |
+| Read scanned paper on the deal | `forvex_get_deal_documents` |
 | Record close actuals | `forvex_record_deal_outcome` |
 | Verify | `forvex_get_deal_history` |
 
@@ -40,6 +41,31 @@ If MCP is offline, announce and stop. Never claim a status moved when it didn't.
 Follow `references/platform/resolve-context.md`. Confirm `{ deal_id, property_id, address, current_status }`. Cache for the chat.
 
 If the user names a deal that's already in the target status (e.g. "move Stevenson to LEAD" and it's already LEAD), that's a **same-status update** — needs `reason_code`, not a status move. See `references/transitions.md`.
+
+### 1b. Check for a scanned settlement statement
+
+A settlement statement is proof the deal closed. When it exists and the deal is not yet
+`SOLD`, offer the move — never make it automatically.
+
+Call `forvex_get_deal_documents({ deal_id, doc_type: "settlementStatement", limit: 1 })`.
+If one comes back:
+
+**Work out which side of the transaction closed from who the parties are, not from the
+document type.** A settlement statement means "this closed"; it does not say whose close it
+was, and the same document type carries opposite pipeline meaning depending on direction:
+
+- `extracted.buyer` matches the workspace's own entity → **acquisition** closed. The deal
+  moves toward `INVENTORY`, not `SOLD`.
+- `extracted.seller` matches the workspace's own entity → **disposition** closed. `SOLD`.
+- Neither matches, or both are ambiguous → **ask**. Do not guess a direction; getting this
+  backwards puts a deal you just bought into `SOLD`.
+
+`extracted.settlement_date` is the close date — use it for `closed_at` rather than today's
+date, since a statement is often scanned days after settlement.
+
+`extracted.net_to_seller` and `extracted.due_from_buyer` are read off the form by position
+rather than inferred, so they are reliable enough to prefill the step 5b outcome actuals —
+still echoed back for confirmation like everything else.
 
 ### 2. Identify the transition
 

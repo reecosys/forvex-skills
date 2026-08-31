@@ -46,6 +46,11 @@ When MCP is connected, before gathering inputs you must resolve whether the fran
 3. If they say **pick up**, call `forvex_get_deal_history(deal_id)` once for context and `forvex_get_deal(deal_id)` for the previous analysis. Anchor the new analysis on the previous numbers and call out diffs in the one-pager. Also load `readvise_property` CRM fields (motivation, lead_source, lead_type) and `analysis.context` — use these to pre-fill seller context; do not re-ask for fields already on file.
 4. If they say **re-run fresh**, proceed normally. A later `forvex_save_deal` will append a new analysis snapshot rather than overwrite history — `status` is never changed by `forvex_save_deal`.
 5. If `forvex_list_deals` returns multiple active deals, surface the addresses and ask which one they mean. Do not silently pick one.
+6. Once a `deal_id` is settled, call `forvex_get_deal_documents({ deal_id, doc_type: "purchaseContract", limit: 1 })`. If a contract comes back, read `extracted.purchase_price`, `extracted.earnest_money` and `extracted.closing_date`, and **say what you found and where it came from** before using any of it:
+
+   > *"Purchase price $100,000 and earnest money $100, from the contract scanned 12 Aug."*
+
+   These values were reviewed by the operator before upload — forVEX Scan does not send an unconfirmed extraction — so they can be used without re-asking. Surfacing them is still required: the franchisee should see what the analysis is standing on. An absent key means the field was not found on the document; treat it as missing, not as zero.
 
 Skip this step if MCP is down; surface the "MCP not connected" banner from step 2 instead.
 
@@ -69,6 +74,7 @@ For normal connected runs, prefer the composite underwriting workflow first. Def
 
 - `forvex_get_property(address)` to resolve the property and `property_id`. Read optional `parcel` (winning debt, last-sale flags, physicals) per `references/platform/mcp-tools.md`. Do not decode Realie codes yourself.
 - `forvex_list_deals({ property_id })` to detect existing deal state on the same address
+- `forvex_get_deal_documents({ deal_id, doc_type })` to read scanned paper on the deal — a purchase contract supplies price, earnest money and closing date without asking. Returns typed fields, not page text. Use `forvex_get_document_text(document_id)` only when the exact wording of a clause matters; it returns the whole document body.
 - `forvex_underwrite(address, purchase_price?)` as the canonical server-side workflow
 - `forvex_get_flood_data(address)` and `forvex_get_market_intelligence(address)` only when you need supporting detail in the write-up
 - `forvex_get_comps(address)` only when the user wants to inspect the comp verdict directly
@@ -84,7 +90,7 @@ Then proceed to manual input gathering. Do not scrape third-party listing sites 
 
 Required:
 - **Address** (or at least city/state to pick reasonable defaults)
-- **Purchase price** (offered, asking, or target)
+- **Purchase price** (offered, asking, or target) — *already satisfied if a scanned purchase contract supplied it in step 1; do not ask again*
 - **ARV** (after-repair value)
 - **Rehab estimate** (full rehab to retail-ready condition)
 
@@ -104,10 +110,17 @@ If anything required is missing, ask for it in **one consolidated question** —
 Use this precedence order:
 
 1. User input this turn
-2. Connected MCP buy-box data
-3. `my-buy-box.md` offline fallback
-4. forVEX defaults in `references/platform/forvex-frame.md`
-5. Calculation defaults in `references/assumptions.md`
+2. Scanned document for this deal (`forvex_get_deal_documents` → `extracted`)
+3. Connected MCP buy-box data
+4. `my-buy-box.md` offline fallback
+5. forVEX defaults in `references/platform/forvex-frame.md`
+6. Calculation defaults in `references/assumptions.md`
+
+A scanned contract is **evidence**; a figure the franchisee gives this turn is **intent**, and intent wins — they may be modelling a counter rather than restating the signed price. **When the two disagree, say so rather than picking silently:**
+
+> *"You said $95,000; the scanned contract says $100,000. Running with $95,000 — flag if that's wrong."*
+
+That mismatch is worth surfacing on its own: it usually means a counter that never got logged.
 
 Do not restate or re-derive server-owned fee schedules and threshold logic in the conversation when MCP already resolved them.
 
