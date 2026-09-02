@@ -11,7 +11,7 @@ Use this when a user action could map to multiple skills. **Hand off** — do no
 | Set up buy-box / first-time setup | `forvex-onboarding` | `forvex_save_buy_box` |
 | Analyze a deal / MAO / what-if | `forvex-underwriting` | `forvex_save_deal`, `forvex_capture_deal_brief` (8.5) |
 | Prep for seller meeting | `forvex-appointment-prep` | none (hands off saves to underwriting) |
-| Render dashboard / PDF / deck | `forvex-presentation` | none |
+| Render dashboard / PDF / deck / debrief / rehab scope | `forvex-presentation` | `forvex_emit_event` (workspace rollup + per-property when addressed) |
 
 ## Pipeline (REdeal)
 
@@ -30,6 +30,19 @@ Use this when a user action could map to multiple skills. **Hand off** — do no
 | Scope / dollar change | `forvex-change-order` | `forvex_update_estimate` |
 | Progress note (no $ change) | `forvex-project-update` | timeline via REbuild MCP |
 | Check project status | `forvex-project-status` | none |
+
+## Cowork lanes (emit to `core.lane_events`)
+
+| User intent | Skill | Key writes |
+|---|---|---|
+| Listing marketing, social audit, newsletter, competitor intel, mail targeting | `cmo-lane` | `forvex_emit_event` |
+| Weekly PM / portfolio reconcile | `pm-lane` | `forvex_emit_event` |
+| KPI / cash / payables review | `cfo-lane` | `forvex_emit_event` |
+| BNI chapter watch, monthly presentation, leadership report | `net-lane` | `forvex_emit_event` |
+| Session closeout, daily sync, meeting prep (not CMO) | `ops-lane` | `forvex_emit_event` |
+
+Scheduled jobs invoke the matching lane skill at the end ("emit then stop"). One lane skill per
+domain — not one skill per cron title.
 
 ## Operate (Readvise)
 

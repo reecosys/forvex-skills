@@ -26,7 +26,7 @@ After every write, call the appropriate read tool and confirm the payload round-
 | `forvex_capture_deal_brief` | response `brief_id` + surface `data_bugs[]` |
 | `forvex_record_deal_outcome` | response error % fields |
 | `forvex_save_draft_estimate` | `forvex_get_estimate` |
-| `readvise_*` writes | `readvise_get_today_summary` |
+| `forvex_emit_event` | response `event_id` (or `deduped: true`) |
 
 Only tell the user "saved" / "logged" / "moved" after verify succeeds.
 

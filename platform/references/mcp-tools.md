@@ -4,7 +4,7 @@
 
 When the **forVEX Control MCP** is connected, pull data from it before asking the user. Server: `https://control.forvex.app/api/mcp` (OAuth — configure once in Claude → Connectors).
 
-> **Status (MCP 0.3.0 / `TOOL_SCHEMA_VERSION` 0.6.0):** Phase 1 read tools, Phase 4 write tools, and the learning-layer capture tools are **live**. Disconnect/reconnect the forVEX Control connector if tool names look stale. Every tool declares `outputSchema`; `forvex_get_comps` / `forvex_get_comp_detail` may include optional top-level `subject` and `search_params`. `forvex_get_property` may include optional `parcel` (decoded last-sale flags, physicals, winning debt). Market flip/rent scores may return `null` while tract resolution works — use MoM/YoY when scores are missing and default `market_risk` to 0.5. Auth failures read: *"Missing or invalid auth context. Re-authorize via /api/oauth/authorize (or refresh your Supabase session) and retry."*
+> **Status (MCP 0.3.0 / `TOOL_SCHEMA_VERSION` 0.8.0):** Phase 1 read tools, Phase 4 write tools, and the learning-layer capture tools are **live**. `forvex_emit_event` (0.8.0, additive) accepts `entity_type: workspace` plus lanes `ops`/`net`. `forvex_render_presentation` (0.7.0, additive) renders operator HTML for six modes. Disconnect/reconnect the forVEX Control connector if tool names look stale. Every tool declares `outputSchema`; `forvex_get_comps` / `forvex_get_comp_detail` may include optional top-level `subject` and `search_params`. `forvex_get_property` may include optional `parcel` (decoded last-sale flags, physicals, winning debt). Market flip/rent scores may return `null` while tract resolution works — use MoM/YoY when scores are missing and default `market_risk` to 0.5. Auth failures read: *"Missing or invalid auth context. Re-authorize via /api/oauth/authorize (or refresh your Supabase session) and retry."*
 
 ---
 
@@ -39,6 +39,9 @@ When MCP is connected, server state is authoritative. `my-buy-box.md` is only an
 | `forvex_capture_deal_brief` | **learning** | End-of-session retrospective: narrative brief + triaged corrections → shadow/candidate learned adjustments. |
 | `forvex_record_deal_outcome` | **learning** | Ground-truth actuals at deal close (sale price, rehab, DOM) keyed to the analysis snapshot. |
 | `forvex_attach_analysis` | 2 | Attach analysis blob to a deal (planning — not used in active skill flows) |
+| `forvex_build_wholesale_sheet` | 0.6+ | Buyer-facing wholesale one-pager (`{ data, html }`). Suppresses operator economics. |
+| `forvex_render_presentation` | **0.7.0 (new)** | Operator HTML for six modes: dashboard, deck, pdf, internal_sheet, appointment_debrief, rehab_scope. Returns `{ schema_version, mode, data, html }`. HTTP twin: `POST /api/operate/presentation`. |
+| `forvex_emit_event` | **0.8.0** | Cross-lane ledger write. `entity_type`: `property` \| `deal` \| `workspace`. Lanes: `cmo` \| `cfo` \| `pm` \| `mkt` \| `ops` \| `net`. |
 
 ---
 
@@ -541,6 +544,20 @@ Ground-truth actuals when a deal closes. Writes to `core.deal_outcomes` keyed to
 
 ---
 
+### `forvex_render_presentation(mode, deal_id | property_id | address | readvise_property_id, …)`
+
+Read-only. One tool, six modes. Returns `{ schema_version: "presentation.v1", mode, data, html }`. HTTP twin: `POST /api/operate/presentation`.
+
+| `mode` | Needs | Notes |
+|--------|-------|-------|
+| `dashboard` `deck` `pdf` `internal_sheet` | Saved analysis | Deterministic HTML from the deal |
+| `appointment_debrief` | `debrief` payload | Server stamps HTML only. Refuses an empty payload. **Never persist as a shareable URL.** |
+| `rehab_scope` | `estimate_id` or `project_id` | Estimate dollars verbatim. Empty `observations` → unreconciled, no invented walkthrough. |
+
+**When to call:** `forvex-presentation` after a saved analysis, after the operator recounts an appointment, or after `forvex_get_estimate` when they want the scope sheet.
+
+---
+
 ## Order of operations (canonical flow)
 
 When the user mentions an address:
@@ -554,7 +571,7 @@ When the user mentions an address:
 6. forvex_get_comps(address)                 ← only when the user wants direct comp inspection
 7. forvex_get_comps_expanded(address)        ← only on wider-search request
 8. forvex_get_rent_estimate(address)         ← only if rent still needs confirmation
-9. Render deal one-pager
+9. forvex_render_presentation({ mode, deal_id })  ← operator artifact (optional)
 ```
 
 The default underwriting path is now step 3. The other tools are supporting reads, not the primary execution chain.
