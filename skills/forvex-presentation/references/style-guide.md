@@ -1,7 +1,11 @@
 # forVEX Presentation — Style Guide
 
 The visual vocabulary for **operator-facing** rendered artifacts (dashboard,
-deck, PDF one-pager, internal deal sheet, appointment debrief, rehab scope). Keep it consistent across all render modes and all
+deck, PDF one-pager, internal deal sheet, appointment debrief, rehab scope).
+**`forvex_render_presentation` in recontrol owns the HTML.** This file documents
+the palette the server already stamps — do not fill templates locally.
+
+Keep it consistent across all render modes and all
 franchisees so a forVEX deal artifact is instantly recognizable.
 
 > **Audience reminder.** These artifacts are the **operator's** view — they show

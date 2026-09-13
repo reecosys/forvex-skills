@@ -88,7 +88,10 @@ FIXTURES = [
         "tolerances": {"score": 0.3},
     },
     {
-        "name": "T4 — Birmingham deep spread BUY wholetail",
+        "name": "T4 — Birmingham deep spread BUY rental",
+        # calc 0.5.0: defaulted rent is 1% of ARV ($1,350), not 1% of purchase
+        # ($450). The rental lane clears on the real number and outranks
+        # wholetail. Matches recontrol nativeEngine.ts on the same inputs.
         "inputs": {
             "address": "222 Elm St, Birmingham AL",
             "purchase": 45000, "arv": 135000, "rehab": 50000,
@@ -97,7 +100,7 @@ FIXTURES = [
         },
         "expected": {
             "verdict": "BUY",
-            "best_strategy": "wholetail",
+            "best_strategy": "rental",
             "confidence": "partial",
         },
         "tolerances": {"score": 0.5},
@@ -110,12 +113,60 @@ FIXTURES = [
             "posture": "hard_money", "franchise_level": 4, "franchise_type": "full",
             "location_type": "suburban",
         },
+        # calc 0.5.0: defaulted rent is 1% of ARV ($1,450), not 1% of purchase
+        # ($950). The rental lane clears, so the verdict moves PASS -> BUY.
+        # Matches recontrol nativeEngine.ts on the same inputs.
         "expected": {
-            "verdict": "PASS",
+            "verdict": "BUY",
             "best_strategy": "rental",
             "confidence": "partial",
         },
         "tolerances": {"score": 0.5},
+    },
+    {
+        # R3 regression: an $85k buy with a $165k ARV must default to $1,650
+        # (1% of ARV), not $850 (1% of purchase). Mirrors the Clarksville case
+        # in recontrol nativeEngine.test.ts.
+        "name": "Rent default — 1% of ARV, not purchase (Clarksville R3)",
+        "inputs": {
+            "address": "1300 Longfellow Dr, Clarksville IN 47129",
+            "purchase": 85000, "arv": 165000, "rehab": 25000,
+        },
+        "expected": {"rent": 1650},
+        "tolerances": {},
+        "check_field": "inputs_echo.rent",
+    },
+    {
+        "name": "Rent source — defaulted rent is labeled arv_1pct",
+        "inputs": {
+            "address": "1300 Longfellow Dr, Clarksville IN 47129",
+            "purchase": 85000, "arv": 165000, "rehab": 25000,
+        },
+        "expected": {"rent_source": "arv_1pct"},
+        "tolerances": {},
+        "check_field": "inputs_echo.rent_source",
+    },
+    {
+        "name": "Rent source — operator rent is request and stays full",
+        "inputs": {
+            "address": "1300 Longfellow Dr, Clarksville IN 47129",
+            "purchase": 85000, "arv": 165000, "rehab": 25000, "rent": 1650,
+        },
+        "expected": {"rent_source": "request"},
+        "tolerances": {},
+        "check_field": "inputs_echo.rent_source",
+    },
+    {
+        # Rentometer-injected rent is market data, not operator ground truth,
+        # so confidence must stay partial even though rent is present.
+        "name": "Rent source — rentometer rent keeps confidence partial",
+        "inputs": {
+            "address": "1300 Longfellow Dr, Clarksville IN 47129",
+            "purchase": 85000, "arv": 165000, "rehab": 25000,
+            "rent": 1580, "rent_source": "rentometer",
+        },
+        "expected": {"confidence": "partial"},
+        "tolerances": {},
     },
     {
         "name": "Franchise fee — Associate L1 (5%)",
@@ -209,6 +260,9 @@ def run_test(fixture: dict) -> tuple[bool, str]:
             if isinstance(exp_value, bool):
                 if (actual is not None) != exp_value:
                     return False, f"check_field {fixture['check_field']}: present={actual is not None}, expected={exp_value}"
+            elif isinstance(exp_value, str):
+                if actual != exp_value:
+                    return False, f"check_field {fixture['check_field']}: got {actual!r}, expected {exp_value!r}"
             else:
                 if abs(actual - exp_value) > 0.001:
                     return False, f"check_field {fixture['check_field']}: got {actual}, expected {exp_value}"

@@ -1,5 +1,5 @@
 {
-  "mcp_schema_version": "0.6.0",
+  "mcp_schema_version": "0.8.0",
   "source": "recontrol/lib/mcp/tools/registry.ts",
   "tools": [
     "forvex_whoami",
@@ -34,6 +34,7 @@
     "forvex_get_estimate",
     "forvex_update_estimate",
     "forvex_build_wholesale_sheet",
+    "forvex_render_presentation",
     "readvise_resolve_property",
     "readvise_create_property_note",
     "readvise_create_task",

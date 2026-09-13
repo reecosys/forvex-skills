@@ -29,3 +29,72 @@ jobs:
             echo "==> $test"
             python3 "$test"
           done
+
+  underwrite-parity:
+    name: Underwriting parity vs recontrol nativeEngine
+    runs-on: ubuntu-latest
+    # The canonical underwriting engine (skills/forvex-underwriting/scripts/underwrite.py)
+    # must stay numerically identical to recontrol's authoritative TypeScript engine
+    # (lib/mcp/underwrite/nativeEngine.ts). mcp_min_version only gates the tool SCHEMA,
+    # so a calc-behavior change like the 0.4.0 -> 0.5.0 rent default is invisible to it.
+    # This job is that missing gate.
+    steps:
+      - name: Check out forvex-skills
+        uses: actions/checkout@v4
+        with:
+          path: forvex-skills
+
+      - name: Check for recontrol access
+        id: gate
+        env:
+          RECONTROL_TOKEN: ${{ secrets.RECONTROL_REPO_TOKEN }}
+        run: |
+          if [ -z "$RECONTROL_TOKEN" ]; then
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Underwriting parity NOT run::RECONTROL_REPO_TOKEN is unavailable (fork PR or missing secret). underwrite.py was not parity-checked against recontrol nativeEngine.ts."
+          else
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Fail if parity is unrunnable on main
+        if: steps.gate.outputs.available != 'true' && github.event_name == 'push'
+        run: |
+          echo "RECONTROL_REPO_TOKEN is required to parity-check the underwriting engine on main." >&2
+          exit 1
+
+      - name: Check out recontrol (authoritative engine)
+        if: steps.gate.outputs.available == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: nibblet/REcontrol
+          ref: main
+          token: ${{ secrets.RECONTROL_REPO_TOKEN }}
+          path: recontrol
+
+      - name: Set up Node
+        if: steps.gate.outputs.available == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: recontrol/package-lock.json
+
+      - name: Set up Python
+        if: steps.gate.outputs.available == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install recontrol dependencies
+        if: steps.gate.outputs.available == 'true'
+        working-directory: recontrol
+        run: npm ci
+
+      - name: Parity — canonical skill vs nativeEngine.ts
+        if: steps.gate.outputs.available == 'true'
+        working-directory: recontrol
+        # Point the parity suite at THIS checkout's script rather than letting it
+        # auto-discover a sibling, so the PR's version is what gets compared.
+        env:
+          FORVEX_UNDERWRITE_PARITY_SCRIPT: ${{ github.workspace }}/forvex-skills/skills/forvex-underwriting/scripts/underwrite.py
+        run: npx vitest run lib/mcp/underwrite/
