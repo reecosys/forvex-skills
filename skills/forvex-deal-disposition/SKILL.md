@@ -1,6 +1,6 @@
 ---
 name: forvex-deal-disposition
-description: Move a forVEX deal through the pipeline lifecycle (LEAD → OFFER → UNDER_CONTRACT → INVENTORY → REHAB → LISTED → PENDING → SOLD, or LOST). Use when the franchisee says "we got it under contract", "made an offer on", "they accepted", "seller backed out", "killed the deal", "we closed on", "listed Maple today", "moved to inventory", or otherwise signals a pipeline status change. This skill ONLY moves status; for notes/touches that don't change status use forvex-activity-log.
+description: Move a forVEX deal through the pipeline lifecycle (LEAD → OFFER → UNDER_CONTRACT → INVENTORY → REHAB → LISTED → PENDING → SOLD, or FOLLOW_UP / LOST). Use when the franchisee says "we got it under contract", "made an offer on", "they accepted", "seller backed out", "check back in the spring", "can't reach them", "killed the deal", "we closed on", "listed Maple today", "moved to inventory", or otherwise signals a pipeline status change. This skill ONLY moves status; for notes/touches that don't change status use forvex-activity-log.
 ---
 
 > **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time)
@@ -17,6 +17,8 @@ You move deals through the pipeline lifecycle on the user's behalf. Disposition 
 - "Listed Maple today"
 - "Moved Cool Brook to inventory"
 - "Killed the Goss School Rd deal — too much foundation"
+- "Can't reach them — park it for follow up"
+- "Listed with an agent, check back when it expires"
 - "Bring the Mel Smith lead back, the seller called"
 
 **Not for** notes, touches, or color commentary that doesn't change status — use `forvex-activity-log`.
@@ -45,8 +47,9 @@ If the user names a deal that's already in the target status (e.g. "move Stevens
 
 From the user's words, determine:
 
-- `new_status` — one of the 9 enum values (uppercase)
-- Whether the move is **forward sequential** (no override), **skip-forward / backward / terminal-reopen** (needs `override_reason`), or **same-status** (needs `reason_code`)
+- `new_status` — one of the 10 enum values (uppercase), including `FOLLOW_UP` (paused) and `LOST` (terminal)
+- Whether the move is **forward sequential** (no override), **FOLLOW_UP / LOST exit** (required closed `reason_code`, no override), **FOLLOW_UP re-entry** to `reentry_stage` from `forvex_get_deal` (no override), **skip-forward / backward / terminal-reopen of LOST/SOLD** (needs `override_reason`), or **same-status** (needs `reason_code`)
+- Required `reason_code` on FOLLOW_UP and LOST — pick from the closed lists in `references/transitions.md`. Do not invent codes.
 - Optional `notes` — captured verbatim from the user (price, seller words, who acted)
 - Optional `follow_up_at` — resolve relative dates to absolute ISO
 
@@ -75,7 +78,7 @@ Call `forvex_update_deal_disposition` with:
 - `new_status`
 - `notes` if provided
 - `override_reason` for skip/backwards/terminal-reopen moves
-- `reason_code` for same-status updates
+- `reason_code` for FOLLOW_UP, LOST, and same-status updates
 - `follow_up_at` if provided
 - `source: "forvex-deal-disposition"`
 - `workspace_id` only when multiple workspaces
@@ -91,7 +94,7 @@ If verification fails or the new status doesn't match, flag the failure — don'
 
 ### 5b. Record outcome actuals (terminal closes)
 
-When the transition lands on a **terminal close** (`SOLD`, or `LOST` when the deal died), call `forvex_record_deal_outcome` with the actuals the user provides. This is the ground truth the learning-calibration cron uses to confirm shadow adjustments — without it, captured corrections from underwriting never advance.
+When the transition lands on a **terminal close** (`SOLD`, or `LOST` when the deal died), call `forvex_record_deal_outcome` with the actuals the user provides. This is the ground truth the learning-calibration cron uses to confirm shadow adjustments — without it, captured corrections from underwriting never advance. **Do not record an outcome on `FOLLOW_UP`.** That deal is paused, not dead.
 
 **Map status → `outcome_kind`:**
 
@@ -125,6 +128,7 @@ After certain transitions, gently nudge the next-most-likely workflow without au
 - → `INVENTORY` → "Ready to start the project? I can open it in REbuild."
 - → `SOLD` → "Want to run a post-mortem?" (hand to `forvex-postmortem`) — outcome actuals should already be on file from step 5b
 - → `LOST` → "Capture the reason for the buy-box / lead-source learning?"
+- → `FOLLOW_UP` → "Want a reminder date on this, or leave it parked?"
 
 These are **offers, not auto-runs**. One line each, then stop.
 

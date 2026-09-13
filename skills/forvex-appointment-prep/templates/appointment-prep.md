@@ -106,6 +106,7 @@ Pick the prompts that match what you learned. Include the actual number / fact i
 - "Listed it on the MLS" → **LISTED**
 - "Got an accepted offer on the listing" → **PENDING**
 - "We closed the sale" → **SOLD**
+- "Can't reach them / check back later / listed with an agent" → **FOLLOW_UP** *(paused; pick a follow-up reason; do not record DEAD)*
 - "Lost this one — take it off the active board" → **LOST** *(only when you mean it; "walked away" alone defaults to a note, not LOST)*
 
 *Defaults applied: {DEFAULTS_NOTE}*

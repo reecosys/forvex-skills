@@ -33,7 +33,7 @@ When MCP is connected, server state is authoritative. `my-buy-box.md` is only an
 | `forvex_get_deal` | 1 | Single deal snapshot. Now surfaces `current_analysis_id`, `analysis`, `analysis_summary`. |
 | `forvex_list_deals` | 1 | Pipeline list. Optional `property_id` filter. |
 | `forvex_save_deal` | **4.1 (new)** | Persist an underwriting snapshot to `core.deals` + `core.deal_analyses`. Status never changes on re-analysis. |
-| `forvex_update_deal_disposition` | **4.2 (new)** | Move a deal through the canonical lifecycle (`LEAD|OFFER|UNDER_CONTRACT|INVENTORY|REHAB|LISTED|PENDING|SOLD|LOST`). |
+| `forvex_update_deal_disposition` | **4.2 (new)** | Move a deal through the canonical lifecycle (`LEAD|OFFER|UNDER_CONTRACT|INVENTORY|REHAB|LISTED|PENDING|SOLD|FOLLOW_UP|LOST`). |
 | `forvex_log_activity` | **4.3 (new)** | Append a Readvise property note + timeline event. Use for counters, calls, drive-bys, walkaway notes — anything that does not change status. |
 | `forvex_get_deal_history` | **4 (new)** | Chronological merge of analyses, lifecycle transitions, and Readvise notes for a deal. |
 | `forvex_capture_deal_brief` | **learning** | End-of-session retrospective: narrative brief + triaged corrections → shadow/candidate learned adjustments. |
@@ -391,13 +391,14 @@ Persist an underwriting analysis to `core.deals` + `core.deal_analyses`.
 
 Move a deal through the canonical lifecycle:
 
-`LEAD → OFFER → UNDER_CONTRACT → INVENTORY → REHAB → LISTED → PENDING → SOLD`, plus `LOST` from any non-terminal status.
+`LEAD → OFFER → UNDER_CONTRACT → INVENTORY → REHAB → LISTED → PENDING → SOLD`, plus `FOLLOW_UP` (paused) and `LOST` (terminal) from any non-terminal status.
 
 **Rules enforced by the server:**
 
 - Sequential forward moves need no override.
-- `LOST` is allowed from any non-terminal status without override (use it when the franchisee explicitly wants the deal off the active board).
-- Backwards or skip transitions, and reopening a terminal deal, require `override_reason`.
+- `FOLLOW_UP` is allowed from any non-terminal status without override. Requires a closed follow-up `reason_code`. Does not record `DEAD`. `forvex_get_deal` returns `reentry_stage` while parked; returning there needs no override.
+- `LOST` is allowed from any non-terminal status without override. Requires a closed lost `reason_code`. Use it when the franchisee wants the deal off the board for good, then record `DEAD`.
+- Backwards or skip transitions, and reopening `SOLD` / `LOST`, require `override_reason`.
 - Same-status updates (status unchanged) require `reason_code` (use this for "documenting a non-progressing event" — counter pending, follow-up scheduled, etc., when you don't want to advance the deal).
 
 **Verify by re-read.** Call `forvex_get_deal(deal_id)` afterwards and confirm `status` matches. If the server rejected the transition (bad rules combo), the tool returns `{ error: ... }` — surface it to the user verbatim.

@@ -122,8 +122,10 @@ When the franchisee comes back after the appointment, **route the update to the 
 | "Listed it" / "on the MLS" | `forvex_update_deal_disposition` → `LISTED` | Sequential forward. |
 | "Got a contract on the listing" | `forvex_update_deal_disposition` → `PENDING` | Sequential forward. |
 | "Closed the sale" / "we sold" | `forvex_update_deal_disposition` → `SOLD` **then** `forvex_record_deal_outcome` | Terminal status. Ask for actuals (sale price, rehab, DOM, close date) and record `outcome_kind: SOLD` — ground truth for the learning-calibration loop. See `forvex-deal-disposition` step 5b. |
-| "Walked away" / "no deal" / "passed" | `forvex_log_activity` (`activity_type: walkaway`) | **Default to logging, not LOST.** Status stays where it was; the brain dump goes into Readvise notes. |
-| "Lost the deal — take it off the board" / "remove from active" / "they sold to someone else" | `forvex_update_deal_disposition` → `LOST` **then** `forvex_record_deal_outcome` | Use `LOST` only when the franchisee explicitly wants the deal removed from the active lifecycle. Record `outcome_kind: DEAD` with whatever actuals they have. See `forvex-deal-disposition` step 5b. |
+| "Walked away" / "no deal" / "passed" | `forvex_log_activity` (`activity_type: walkaway`) | **Default to logging, not LOST.** If they mean they passed for good, ask and use LOST `pass_on_margin` / `pass_on_bandwidth`. Status stays put unless they pick Follow Up or Lost. |
+| "Can't reach them" / "check back later" / "listed with an agent" / "under contract elsewhere" / "seller cancelled, keep the file" | `forvex_update_deal_disposition` → `FOLLOW_UP` | Required follow-up `reason_code` (see `forvex-deal-disposition` transitions). Do **not** record `DEAD`. |
+| "Bring them back" (from FOLLOW_UP) | `forvex_update_deal_disposition` → `reentry_stage` from `forvex_get_deal` | No override. |
+| "Lost the deal — take it off the board" / "remove from active" / "they sold to someone else" | `forvex_update_deal_disposition` → `LOST` **then** `forvex_record_deal_outcome` | Use `LOST` only when the franchisee explicitly wants the deal removed for good. Required lost `reason_code`. Record `outcome_kind: DEAD`. See `forvex-deal-disposition` step 5b. |
 | "Drove by, vacant, left card" | `forvex_log_activity` (`drive_by` / `no_contact`) | Status untouched. |
 | "Talked to the seller — still negotiating" | `forvex_log_activity` (`call` / `contact_made`) | Status untouched; capture the substance in `notes`. |
 | "Counter at $X — rerun the ladder" | `forvex_log_activity` (`counter`) **then** re-invoke `forvex-underwriting` | The disposition doesn't change just because there's a counter; the conversation event does. After the rerun, if the franchisee says "save the new ladder", `forvex-underwriting` will `forvex_save_deal` again. |
@@ -134,11 +136,11 @@ When the franchisee comes back after the appointment, **route the update to the 
 **Rules of the road:**
 
 - **Status moves are for real lifecycle changes.** If you can't name the new pipeline stage out loud, it isn't a disposition — it's an activity.
-- **`LOST` is opt-in, not a default.** "Walked away" ≠ "lost". Only use `LOST` when the user uses words like "lost", "killed it", "take it off the board", "remove from active".
+- **`LOST` is opt-in, not a default.** "Walked away" ≠ "lost". Only use `LOST` when the user uses words like "lost", "killed it", "take it off the board", "remove from active", "sold to someone else". Park long-term work as `FOLLOW_UP`, not `LOST`.
 - **Always anchor by `deal_id`** when you have it. `forvex_log_activity` accepts `property_id` or `address` only as a fallback.
 - **Verify by re-read** after disposition changes — call `forvex_get_deal(deal_id)` and confirm `current_status` matches.
 - **`forvex-appointment-prep` does not call `forvex_save_deal`.** Underwriting analyses are owned by `forvex-underwriting`. When the franchisee transitions to underwriting or says "save," **pass gathered seller context forward** in the handoff (`seller_motivation`, `lead_source`, `lead_type`, `notes`) so `forvex-underwriting` can include it in `forvex_save_deal` `context`.
-- **Terminal closes feed the learning loop.** On `SOLD` or `LOST`, disposition alone is not enough — also call `forvex_record_deal_outcome` with actuals (or hand to `forvex-deal-disposition` if that skill is active). Without outcomes, corrections captured in underwriting step 8.5 never get confirmed.
+- **Terminal closes feed the learning loop.** On `SOLD` or `LOST`, disposition alone is not enough — also call `forvex_record_deal_outcome` with actuals (or hand to `forvex-deal-disposition` if that skill is active). **FOLLOW_UP is not a close.** Without outcomes, corrections captured in underwriting step 8.5 never get confirmed.
 
 ## Probability of close — how to frame it
 

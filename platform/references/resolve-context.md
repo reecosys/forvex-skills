@@ -39,7 +39,7 @@ under_contract → UNDER_CONTRACT
 ```
 
 The lifecycle enum (authoritative) is:
-`LEAD → OFFER → UNDER_CONTRACT → INVENTORY → REHAB → LISTED → PENDING → SOLD`, plus terminal `LOST`.
+`LEAD → OFFER → UNDER_CONTRACT → INVENTORY → REHAB → LISTED → PENDING → SOLD`, plus paused `FOLLOW_UP` and terminal `LOST`.
 
 ## Echo-back
 
