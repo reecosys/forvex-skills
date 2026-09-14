@@ -122,11 +122,15 @@ If verification fails or the new status doesn't match, flag the failure — don'
 
 When the transition lands on a **terminal close** (`SOLD`, or `LOST` when the deal died), call `forvex_record_deal_outcome` with the actuals the user provides. This is the ground truth the learning-calibration cron uses to confirm shadow adjustments — without it, captured corrections from underwriting never advance. **Do not record an outcome on `FOLLOW_UP`.** That deal is paused, not dead.
 
-**Map status → `outcome_kind`:**
+For a weekly sweep or deals that closed without actuals, hand to **`forvex-deal-outcomes`**.
 
-| New status | `outcome_kind` |
+**Map status / annotated exit → `outcome_kind`:**
+
+| New status / exit | `outcome_kind` |
 |---|---|
-| `SOLD` | `SOLD` |
+| `SOLD` + Wholesale | `WHOLESALED` |
+| `SOLD` + Retail / Wholetail / Other | `SOLD` |
+| `SOLD` + BRRRR | `RENTED` |
 | `LOST` | `DEAD` |
 
 Ask for what they know in one line: sale price, rehab spend, days on market, close date. Don't invent numbers — omit fields the user didn't give.
@@ -186,4 +190,5 @@ Do not bundle both writes under one confirmation — let each skill own its own 
 - **forvex-activity-log** — non-status touches and notes
 - **forvex-rehab-estimator** — natural follow-up after `UNDER_CONTRACT`
 - **forvex-postmortem** — natural follow-up after `SOLD`
+- **forvex-deal-outcomes** — missing / weekly close actuals (does not move status)
 - **forvex-underwriting** — for "is this a good price?" questions

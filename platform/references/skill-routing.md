@@ -20,6 +20,7 @@ Use this when a user action could map to multiple skills. **Hand off** — do no
 | Morning pipeline triage | `forvex-pipeline-standup` | none (read-only) |
 | Log call / drive-by / counter note | `forvex-activity-log` | `forvex_log_activity` |
 | Move deal status (OFFER → SOLD) | `forvex-deal-disposition` | `forvex_update_deal_disposition`, `forvex_record_deal_outcome` (terminal) |
+| Missing / refresh close actuals | `forvex-deal-outcomes` | `forvex_list_deal_outcomes`, `forvex_record_deal_outcome`, `forvex_update_deal_outcome` |
 | Post-meeting updates | `forvex-appointment-prep` → routes to disposition / activity / underwriting |
 
 ## Execution (REbuild)
@@ -65,6 +66,6 @@ domain — not one skill per cron title.
 
 1. **Underwriting save** — `forvex_save_deal` + `context.session_summary` (Operate memo).
 2. **Same close-out** — `forvex_capture_deal_brief` with triaged `corrections[]` (step 8.5).
-3. **Deal close** — `forvex_record_deal_outcome` at `SOLD` / `LOST` (disposition or appointment-prep handoff).
+3. **Deal close** — `forvex_record_deal_outcome` at `SOLD` / `LOST` (disposition or appointment-prep handoff). Weekly / missing actuals: `forvex-deal-outcomes`.
 
 Without step 3, captured adjustments never confirm in `/learning`.

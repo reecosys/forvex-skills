@@ -31,7 +31,9 @@ When MCP is connected, server state is authoritative. `my-buy-box.md` is only an
 | `forvex_underwrite` | Next | Canonical deterministic underwriting execution with server-resolved buy-box defaults |
 | `forvex_save_buy_box` | 2.7 | Persist buy-box (used by `forvex-onboarding`) |
 | `forvex_get_deal` | 1 | Single deal snapshot. Now surfaces `current_analysis_id`, `analysis`, `analysis_summary`. |
-| `forvex_list_deals` | 1 | Pipeline list. Optional `property_id` filter. |
+| `forvex_list_deals` | 1 | Pipeline list. Optional `property_id` filter. Additive `include_archived` (default false). |
+| `forvex_list_deal_outcomes` | **learning** | SOLD/LOST candidates + closing outcome. `include_archived` default true. `missing_only` finds deals with no SOLD/RENTED/WHOLESALED/DEAD. |
+| `forvex_update_deal_outcome` | **learning** | Patch actuals on an existing `core.deal_outcomes` row. |
 | `forvex_save_deal` | **4.1 (new)** | Persist an underwriting snapshot to `core.deals` + `core.deal_analyses`. Status never changes on re-analysis. |
 | `forvex_update_deal_disposition` | **4.2 (new)** | Move a deal through the canonical lifecycle (`LEAD|OFFER|UNDER_CONTRACT|INVENTORY|REHAB|LISTED|PENDING|SOLD|FOLLOW_UP|LOST`). |
 | `forvex_log_activity` | **4.3 (new)** | Append a Readvise property note + timeline event. Use for counters, calls, drive-bys, walkaway notes — anything that does not change status. |
@@ -541,7 +543,7 @@ Ground-truth actuals when a deal closes. Writes to `core.deal_outcomes` keyed to
 - Server returns `arv_error_pct` / `rehab_error_pct` against the snapshot's predicted values.
 - Idempotent when `idempotency_key` (UUID) is supplied.
 
-**When to call:** `forvex-deal-disposition` when a deal reaches a terminal close (`SOLD`, `LOST` → `DEAD`, etc.). Without outcomes, nothing in the learning loop gets confirmed.
+**When to call:** `forvex-deal-disposition` at a live close, or `forvex-deal-outcomes` for missing / weekly refresh. Without outcomes, nothing in the learning loop gets confirmed.
 
 ---
 

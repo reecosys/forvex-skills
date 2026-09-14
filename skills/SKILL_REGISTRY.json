@@ -33,6 +33,7 @@
         "forvex-underwriting",
         "forvex-appointment-prep",
         "forvex-deal-disposition",
+        "forvex-deal-outcomes",
         "forvex-activity-log",
         "forvex-pipeline-standup",
         "forvex-presentation",
@@ -106,7 +107,15 @@
       "tier": "mcp",
       "writes": ["forvex_update_deal_disposition", "forvex_record_deal_outcome"],
       "reads": ["forvex_resolve_property", "forvex_list_deals", "forvex_get_deal", "forvex_get_deal_history"],
-      "handoffs": ["forvex-rehab-estimator", "forvex-postmortem"],
+      "handoffs": ["forvex-rehab-estimator", "forvex-postmortem", "forvex-deal-outcomes"],
+      "platform_refs": ["resolve-context", "write-discipline", "skill-routing"]
+    },
+    "forvex-deal-outcomes": {
+      "lane": "redeal",
+      "tier": "mcp",
+      "writes": ["forvex_record_deal_outcome", "forvex_update_deal_outcome"],
+      "reads": ["forvex_list_deal_outcomes", "forvex_get_property", "forvex_get_deal"],
+      "handoffs": ["forvex-deal-disposition", "forvex-postmortem"],
       "platform_refs": ["resolve-context", "write-discipline", "skill-routing"]
     },
     "forvex-finish": {
@@ -146,7 +155,7 @@
       "tier": "demo",
       "writes": [],
       "reads": [],
-      "handoffs": [],
+      "handoffs": ["forvex-deal-outcomes"],
       "platform_refs": ["skill-routing-public"]
     },
     "forvex-presentation": {

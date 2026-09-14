@@ -112,7 +112,7 @@ delta** — the new profit and verdict — not the whole report.
   platform can hand off the projected numbers; this skill is the standalone door.)
 - It does not roll up multiple deals into a portfolio trend. It does one deal at a
   time. (A running scorecard across deals is a natural next skill.)
-- It does not save anything anywhere.
+- It does not save anything anywhere on its own. When the Control MCP is connected and the user confirmed the actuals, hand to **`forvex-deal-outcomes`** so `core.deal_outcomes` gets the same numbers.
 - It does not invent the three required numbers. If purchase, rehab, or sale is
   missing on either side, it asks.
 
