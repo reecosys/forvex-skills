@@ -32,9 +32,9 @@ Every KPI used in the deal one-pager. When a user asks "what is DSCR?" or "how i
 - **For wholesale:** rehab is NOT in the basis — the investor-buyer pays for repairs.
 
 ### Predicted Sale Price
-- **Retail:** ARV × 0.99
-- **Wholetail:** ARV × (0.85 + rehab_progress × 0.04)
-- **Wholesale:** (ARV − full_rehab) × 0.80
+- **Retail:** ARV × 1.00
+- **Wholetail:** ARV × wholetail_base_pct (default 0.95; from buy-box prefs)
+- **Wholesale:** (ARV × wholesale_sale_pct) − full_rehab (default 0.80; from buy-box prefs)
 - **Why this matters:** Different strategies discount ARV differently because they trade off speed for net.
 
 ### Entry % of ARV

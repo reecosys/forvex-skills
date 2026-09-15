@@ -42,7 +42,7 @@ def assert_eq(actual, expected, label):
 
 FIXTURES = [
     {
-        "name": "T1 — Dallas BUY rental",
+        "name": "T1 — Dallas NEGOTIATE wholetail",
         "inputs": {
             "address": "123 Main St, Dallas TX",
             "purchase": 135000, "arv": 215000, "rehab": 32000, "rent": 1650,
@@ -50,9 +50,9 @@ FIXTURES = [
             "location_type": "suburban",
         },
         "expected": {
-            "verdict": "BUY",
-            "best_strategy": "rental",
-            "best_deal_score": 9.7,
+            "verdict": "NEGOTIATE",
+            "best_strategy": "wholetail",
+            "best_deal_score": 10.0,
             "confidence": "full",
         },
         "tolerances": {"score": 0.3},
@@ -88,10 +88,9 @@ FIXTURES = [
         "tolerances": {"score": 0.3},
     },
     {
-        "name": "T4 — Birmingham deep spread BUY rental",
-        # calc 0.5.0: defaulted rent is 1% of ARV ($1,350), not 1% of purchase
-        # ($450). The rental lane clears on the real number and outranks
-        # wholetail. Matches recontrol nativeEngine.ts on the same inputs.
+        "name": "T4 — Birmingham deep spread BUY wholetail",
+        # Python fallback ranking (not native recommendation ranking). Wholetail
+        # predicted sale is now ARV × 0.95, which is the winning Python lane.
         "inputs": {
             "address": "222 Elm St, Birmingham AL",
             "purchase": 45000, "arv": 135000, "rehab": 50000,
@@ -100,7 +99,7 @@ FIXTURES = [
         },
         "expected": {
             "verdict": "BUY",
-            "best_strategy": "rental",
+            "best_strategy": "wholetail",
             "confidence": "partial",
         },
         "tolerances": {"score": 0.5},

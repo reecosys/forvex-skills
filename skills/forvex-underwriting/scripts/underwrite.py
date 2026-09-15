@@ -29,7 +29,7 @@ import sys
 from typing import Any
 
 
-__version__ = "0.5.0"  # Defaults missing rent to 1% of ARV; echoes rent_source.
+__version__ = "0.6.0"  # Disposition sale prices: retail 100% ARV, wholetail ARV×base_pct, wholesale ARV×pct−rehab.
 
 
 # ---------- Defaults (mirror references/assumptions.md) ----------
@@ -62,9 +62,8 @@ DEFAULTS = {
     "holding_assignment": 0,
 
     # Sale-price targeting
-    "retail_sale_pct": 0.99,
-    "wholetail_base_pct": 0.85,
-    "wholetail_uplift": 0.04,
+    "retail_sale_pct": 1.0,
+    "wholetail_base_pct": 0.95,
     "wholesale_sale_pct": 0.80,
     # Pure-assignment: disciplined end-buyer pays this % of ARV minus FULL repairs. A buy-box
     # preference (fallback 0.80), distinct from the 0.65 flip entry.
@@ -148,6 +147,13 @@ DEFAULTS = {
 
 def clamp(x: float, lo: float = 0.0, hi: float = 1.0) -> float:
     return max(lo, min(hi, x))
+
+
+def resolved_sale_pct(inputs: dict, key: str) -> float:
+    value = inputs.get(key)
+    if isinstance(value, (int, float)) and 0 <= value <= 1:
+        return float(value)
+    return DEFAULTS[key]
 
 
 def amortize_monthly_payment(principal: float, annual_rate: float, years: int) -> float:
@@ -427,7 +433,7 @@ def calc_retail_flip(inputs: dict) -> dict:
     rehab = inputs["rehab"]
     months = inputs.get("holding_retail", DEFAULTS["holding_retail"])
     posture = inputs.get("posture", "hard_money")
-    sale_pct = inputs.get("retail_sale_pct", DEFAULTS["retail_sale_pct"])
+    sale_pct = resolved_sale_pct(inputs, "retail_sale_pct")
     level = inputs.get("franchise_level")
     ftype = inputs.get("franchise_type")
 
@@ -498,8 +504,7 @@ def calc_wholetail(inputs: dict) -> dict:
     level = inputs.get("franchise_level")
     ftype = inputs.get("franchise_type")
 
-    rehab_progress = clamp(partial_rehab / full_rehab if full_rehab > 0 else 0)
-    sale_pct = min(1.0, DEFAULTS["wholetail_base_pct"] + rehab_progress * DEFAULTS["wholetail_uplift"])
+    sale_pct = resolved_sale_pct(inputs, "wholetail_base_pct")
     predicted_sale = arv * sale_pct
 
     holding = build_holding_costs(purchase, months,
@@ -572,7 +577,8 @@ def calc_wholesale(inputs: dict) -> dict:
     level = inputs.get("franchise_level")
     ftype = inputs.get("franchise_type")
 
-    predicted_sale = DEFAULTS["wholesale_sale_pct"] * max(0, arv - full_rehab)
+    sale_pct = resolved_sale_pct(inputs, "wholesale_sale_pct")
+    predicted_sale = max(0, arv * sale_pct - full_rehab)
 
     if variant == "double_close":
         holding_total = 0
@@ -625,6 +631,7 @@ def calc_wholesale(inputs: dict) -> dict:
         "strategy": "wholesale",
         "variant": variant,
         "predicted_sale": round(predicted_sale, 2),
+        "sale_pct_of_arv": round(sale_pct, 4),
         "rehab_used": 0,
         "rehab_ref": full_rehab,
         "holding_months": months if variant != "double_close" else 0,
@@ -1121,9 +1128,11 @@ def compute_confidence(inputs: dict) -> str:
 # ---------- MAO ----------
 
 def mao_retail(arv: float, rehab: float, target_profit: float = None,
-               franchise_level: int = None, franchise_type: str = None) -> float:
+               franchise_level: int = None, franchise_type: str = None,
+               sale_pct: float = None) -> float:
     target = target_profit or DEFAULTS["target_profit_flip"]
-    predicted_sale = arv * DEFAULTS["retail_sale_pct"]
+    pct = DEFAULTS["retail_sale_pct"] if sale_pct is None else sale_pct
+    predicted_sale = arv * pct
     franchise = franchise_fee_pct(franchise_level, franchise_type)
     sale_side_fees = predicted_sale * (DEFAULTS["realtor_regular"] + franchise +
                                        DEFAULTS["other_sale_fee_rate"]) + DEFAULTS["marketing_retail"]
@@ -1132,9 +1141,11 @@ def mao_retail(arv: float, rehab: float, target_profit: float = None,
 
 
 def mao_wholesale(arv: float, rehab: float, target_profit: float = None,
-                  franchise_level: int = None, franchise_type: str = None) -> float:
+                  franchise_level: int = None, franchise_type: str = None,
+                  sale_pct: float = None) -> float:
     target = target_profit or DEFAULTS["target_profit_wholesale"]
-    predicted_sale = DEFAULTS["wholesale_sale_pct"] * max(0, arv - rehab)
+    pct = DEFAULTS["wholesale_sale_pct"] if sale_pct is None else sale_pct
+    predicted_sale = max(0, arv * pct - rehab)
     franchise = franchise_fee_pct(franchise_level, franchise_type)
     sale_side = predicted_sale * (DEFAULTS["realtor_discount"] + franchise +
                                    DEFAULTS["other_sale_fee_rate"])
@@ -1144,13 +1155,13 @@ def mao_wholesale(arv: float, rehab: float, target_profit: float = None,
 
 def mao_wholetail(arv: float, rehab: float, partial_rehab: float = None,
                   target_profit: float = None,
-                  franchise_level: int = None, franchise_type: str = None) -> float:
+                  franchise_level: int = None, franchise_type: str = None,
+                  sale_pct: float = None) -> float:
     target = target_profit or DEFAULTS["target_profit_wholetail"]
     if partial_rehab is None:
         partial_rehab = round(rehab * 0.55)
-    rehab_progress = clamp(partial_rehab / rehab if rehab > 0 else 0)
-    sale_pct = min(1.0, DEFAULTS["wholetail_base_pct"] + rehab_progress * DEFAULTS["wholetail_uplift"])
-    predicted_sale = arv * sale_pct
+    pct = DEFAULTS["wholetail_base_pct"] if sale_pct is None else sale_pct
+    predicted_sale = arv * pct
     franchise = franchise_fee_pct(franchise_level, franchise_type)
     sale_side = predicted_sale * (DEFAULTS["realtor_discount"] + franchise +
                                    DEFAULTS["other_sale_fee_rate"])
@@ -1342,9 +1353,12 @@ def underwrite(inputs: dict) -> dict:
     level = inputs.get("franchise_level")
     ftype = inputs.get("franchise_type")
     maos = {
-        "retail_at_target": round(mao_retail(arv, rehab, franchise_level=level, franchise_type=ftype), -2),
-        "wholetail_at_target": round(mao_wholetail(arv, rehab, franchise_level=level, franchise_type=ftype), -2),
-        "wholesale_at_target": round(mao_wholesale(arv, rehab, franchise_level=level, franchise_type=ftype), -2),
+        "retail_at_target": round(mao_retail(arv, rehab, franchise_level=level, franchise_type=ftype,
+                                            sale_pct=resolved_sale_pct(inputs, "retail_sale_pct")), -2),
+        "wholetail_at_target": round(mao_wholetail(arv, rehab, franchise_level=level, franchise_type=ftype,
+                                                  sale_pct=resolved_sale_pct(inputs, "wholetail_base_pct")), -2),
+        "wholesale_at_target": round(mao_wholesale(arv, rehab, franchise_level=level, franchise_type=ftype,
+                                                  sale_pct=resolved_sale_pct(inputs, "wholesale_sale_pct")), -2),
         "rental_at_dscr": mao_rental(rental["rent_used"]),
     }
 

@@ -116,7 +116,7 @@ For each strategy, MAO is the purchase price at which the deal hits the target p
 
 ```
 target_profit = target_profit_retail
-predicted_sale = ARV × 0.99
+predicted_sale = ARV × 1.00
 franchise = franchise_fee_pct(level, type)
 sale_side_fees = predicted_sale × (0.06 + franchise + 0.002) + 500
 
@@ -127,7 +127,7 @@ MAO ≈ (predicted_sale − rehab − sale_side_fees − target_profit) / 1.0071
 
 ```
 target_profit = target_profit_wholesale
-predicted_sale = 0.80 × (ARV − rehab)
+predicted_sale = (ARV × wholesale_sale_pct) − rehab   # default 0.80
 franchise = franchise_fee_pct(level, type)
 sale_side_fees = predicted_sale × (0.04 + franchise + 0.002)
 

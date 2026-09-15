@@ -135,13 +135,13 @@ roi                   = (net_profit / cost_basis) × 100
 - `purchase_price`, `arv`, `full_rehab`
 - `holding_months` (default 3)
 - `posture` (default `hard_money`)
-- `arv_realization_pct` (default 99%)
+- `arv_realization_pct` (default 100%)
 - `franchise_level`, `franchise_type` (drive transaction fee)
 
 ### Computation
 
 ```
-predicted_sale = arv × 0.99
+predicted_sale = arv × 1.00
 
 holding_costs   = build_holding_costs(purchase_price, 3 months)
 realtor_fee     = predicted_sale × 0.06
@@ -178,8 +178,7 @@ rehab_ratio      = rehab / max(net_profit, 1)
 ### Computation
 
 ```
-rehab_progress = min(partial_rehab / full_rehab, 1)
-sale_pct       = min(1.0, 0.85 + rehab_progress × 0.04)
+sale_pct       = wholetail_base_pct   # default 0.95; from buy-box prefs when set
 predicted_sale = arv × sale_pct
 
 holding_costs   = build_holding_costs(purchase, 2 months)
@@ -218,7 +217,7 @@ Take possession (default) or do a simultaneous double-close. Sell as-is to an in
 ### Computation (possession)
 
 ```
-predicted_sale = 0.80 × (arv − full_rehab)
+predicted_sale = (arv × wholesale_sale_pct) − full_rehab   # default 80%; floor at 0
 
 holding_costs   = build_holding_costs(purchase, 1 month)
 realtor_fee     = predicted_sale × 0.04
