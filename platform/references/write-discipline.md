@@ -30,6 +30,7 @@ After every write, call the appropriate read tool and confirm the payload round-
 | `readvise_upsert_rental_debt` | `readvise_list_rental_debt` |
 | `readvise_upsert_property_capex` | `readvise_list_property_capex` |
 | `readvise_upsert_rental_ops` | `readvise_list_rental_ops` |
+| `readvise_create_accountability_debrief` | `readvise_get_prior_context` (next session) / response `debrief_id` |
 
 Only tell the user "saved" / "logged" / "moved" after verify succeeds.
 

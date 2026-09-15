@@ -36,6 +36,8 @@ Use this when a user action could map to multiple skills. **Hand off** — do no
 
 | User intent | Skill | Key writes |
 |---|---|---|
+| Triage / hand work to specialist Bots, company week brief | `cos-lane` | Grok `@`/DM + `forvex_emit_event` (`work_dispatched` / `week_briefed`) |
+| Weekly accountability check-in | `cos-lane` (or alias `weekly-accountability`) | `readvise_create_accountability_debrief` |
 | Listing marketing, social audit, newsletter, competitor intel, mail targeting | `cmo-lane` | `forvex_emit_event` |
 | Weekly COO / PM reconcile (flips + Holdings rentals) | `pm-lane` | `forvex_emit_event` (+ CapEx/ops upserts) |
 | KPI / cash / payables review | `cfo-lane` | `forvex_emit_event` |
@@ -48,15 +50,17 @@ Scheduled jobs invoke the matching lane skill at the end ("emit then stop"). One
 domain — not one skill per cron title. CMO/CFO **reads** (pipeline, market brief, outcomes)
 are allowlisted in those skills. Writes stay `forvex_emit_event` except CFO's
 Holdings capital map (`readvise_upsert_rental_debt`) and COO's CapEx watch + rental ops
-snapshots. COO (`pm-lane`) may **read** the capital map and the flip pipeline; it does not
-write debt or underwrite.
+snapshots. **CoS (`cos-lane`) orchestrates in Grok** — `@` or async-DM the owner Bot,
+then emit `work_dispatched` for the ledger. Paul is not the courier. Domain skills
+accept CoS handoff messages and reply to CoS when done. COO (`pm-lane`) may **read**
+the capital map and the flip pipeline; it does not write debt or underwrite.
 
 ## Operate (Readvise)
 
 | User intent | Skill | Key writes |
 |---|---|---|
 | Notes, tasks, pulse, advisor lane | `readvise-capture` | `readvise_*` |
-| Weekly accountability check-in | `weekly-accountability` | `readvise_create_accountability_debrief` |
+| Weekly accountability check-in (alias) | `weekly-accountability` | `readvise_create_accountability_debrief` (prefer `cos-lane` on the CoS bot) |
 
 ## Demo (no MCP)
 

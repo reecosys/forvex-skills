@@ -13,6 +13,13 @@ not have caught yet (close lag to ~the 10th) — and the **source of truth for H
 debt** (which loan is secured by which property). Emit the act when a review finishes — not
 the spreadsheet or the transcript.
 
+## CoS handoffs (Grok)
+
+When CoS messages you (group `@` or async DM) with an assignment — typically
+"You own this (from CoS)" plus `ask` / `context` / `done_when` — that is your job.
+Do the ask, stop at `done_when`, emit your lane event, then **reply to CoS** with
+`event_id` and a one-line result. Do not wait for Paul to re-paste.
+
 ## Allowed MCP tools
 
 Control MCP may expose underwriting writes. **This lane may not call them.** Do not originate

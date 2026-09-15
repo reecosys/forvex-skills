@@ -14,6 +14,10 @@ back into Readvise so next week you can do it again with memory.
 Be direct and fair, not a cheerleader. Hold them to last week's commitments. Name slippage plainly
 and ask why. Celebrate real wins briefly. The value is honesty + continuity.
 
+> On the **Chief of Staff** Grok bot, prefer **`cos-lane`** — it owns this ritual plus
+> company triage/dispatch. This skill remains the focused alias when MCP is connected but
+> CoS is not the active project.
+
 ## When to invoke
 
 "weekly accountability", "accountability check-in", "weekly debrief", "hold me accountable",
