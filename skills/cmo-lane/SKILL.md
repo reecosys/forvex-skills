@@ -1,15 +1,43 @@
 ---
 name: cmo-lane
-description: The CMO (marketing) Cowork lane. Produces marketing artifacts AND emits a structured event to the forVEX activity ledger at the moment of action. Use for listing-tied marketing, brand/workspace routines (weekly social audit, newsletter, competitor intel, mail targeting, presentations), and scheduled CMO jobs. Requires the forVEX Control MCP connector. Emission is definition-of-done.
+description: The CMO (marketing) Cowork lane. Reads the deal spine and market brief, produces marketing artifacts, AND emits a structured event to the forVEX activity ledger at the moment of action. Use for listing-tied marketing, brand/workspace routines (weekly social audit, newsletter, competitor intel, mail targeting, presentations), and scheduled CMO jobs. Requires the forVEX Control MCP connector. Emission is definition-of-done. Write tool is forvex_emit_event only — never underwrite or save a deal.
 ---
 
 > **Contract:** `reecosystem-core/docs/SKILL_SYSTEM_CONTRACT.md` · shared refs: `references/platform/` (vendored at package time) · MCP data: `references/data-sources.md`
 
 # CMO Lane
 
-You work the marketing lane and **emit** structured events into the forVEX activity ledger
-(`core.lane_events`) at the moment you do something. Readvise reasons over that ledger. The
-artifact stays in Drive (or the Claude session); the event is the small structured signal.
+You work the marketing lane. **Read** the deal spine and market data before you draft.
+**Emit** a structured event into the forVEX activity ledger (`core.lane_events`) at the
+moment you do something. Readvise reasons over that ledger. The artifact stays in Drive
+(or the session); the event is the small structured signal.
+
+## Allowed MCP tools
+
+Control MCP may expose underwriting and rehab writes. **This lane may not call them.**
+
+**Reads** — use when they apply, before drafting:
+
+| Tool | When |
+|------|------|
+| `forvex_list_deals` | What to market. Prefer `status` `LISTED`, `REHAB`, `INVENTORY`. |
+| `forvex_get_property` | Resolve `address` → `property_id` before a property emit. Listing facts. |
+| `forvex_get_deal` | Listing-tied work on a known deal. |
+| `forvex_get_market_brief` | Local Market Intel pillar. **Data only** — you write the narrative. |
+| `forvex_get_market_intelligence` | Property-tied tract/momentum for a named house. |
+| `forvex_render_presentation` | Monday deck/PDF for a **saved** analysis. Do not re-run math. No save → hand off to `forvex-presentation` / `forvex-underwriting`. |
+| `readvise_list_competitor_work` | **First** call on a competitor sweep (`intel_gathered`). |
+
+**Write:** `forvex_emit_event` only.
+
+**Forbidden:** `forvex_underwrite`, `forvex_save_deal`, `forvex_update_deal_disposition`,
+`forvex_record_deal_outcome`, rehab writes (`forvex_save_draft_estimate`, …), buy-box
+writes, `readvise_create_*` / pulse / tasks. Hand those to the skill that owns them.
+
+Mail targeting / DMA is **not** on MCP. Do not invent ZIP lists. If there is no operator-
+supplied list, say so — do not emit `audience_targeted` from a guessed geography.
+
+Beehiiv, Blotato, and Drive stay outside Control MCP. Draft-only until Paul approves publish.
 
 ## The rule: emission is definition-of-done
 
@@ -70,10 +98,11 @@ snake_case, past-tense. Propose additions if a real action isn't covered.
 
 ## Definition-of-done checklist
 
-1. Do the work (artifact, audit, sourcing, batch).
-2. Choose entity: workspace, or resolve property/deal.
-3. `forvex_emit_event` with `lane: "cmo"`, verb, payload, `source_uri`.
-4. Confirm `event_id`. Only then is the task done.
+1. **Read** when the job needs it (pipeline, market brief, competitor queue, saved deal).
+2. Do the work (artifact, audit, sourcing, batch). Quote MCP fields; do not recompute ARV/MAO.
+3. Choose entity: workspace, or resolve property/deal.
+4. `forvex_emit_event` with `lane: "cmo"`, verb, payload, `source_uri`.
+5. Confirm `event_id`. Only then is the task done.
 
 ## What NOT to emit
 

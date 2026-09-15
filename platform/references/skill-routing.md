@@ -39,11 +39,14 @@ Use this when a user action could map to multiple skills. **Hand off** — do no
 | Listing marketing, social audit, newsletter, competitor intel, mail targeting | `cmo-lane` | `forvex_emit_event` |
 | Weekly PM / portfolio reconcile | `pm-lane` | `forvex_emit_event` |
 | KPI / cash / payables review | `cfo-lane` | `forvex_emit_event` |
+| Holdings loan ↔ property / payoff update | `cfo-lane` | `readvise_upsert_rental_debt` (then emit `position_reviewed`) |
 | BNI chapter watch, monthly presentation, leadership report | `net-lane` | `forvex_emit_event` |
 | Session closeout, daily sync, meeting prep (not CMO) | `ops-lane` | `forvex_emit_event` |
 
 Scheduled jobs invoke the matching lane skill at the end ("emit then stop"). One lane skill per
-domain — not one skill per cron title.
+domain — not one skill per cron title. CMO/CFO **reads** (pipeline, market brief, outcomes)
+are allowlisted in those skills; they still write only `forvex_emit_event` except CFO's
+Holdings capital map (`readvise_upsert_rental_debt`).
 
 ## Operate (Readvise)
 

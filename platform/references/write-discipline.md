@@ -27,6 +27,7 @@ After every write, call the appropriate read tool and confirm the payload round-
 | `forvex_record_deal_outcome` | response error % fields |
 | `forvex_save_draft_estimate` | `forvex_get_estimate` |
 | `forvex_emit_event` | response `event_id` (or `deduped: true`) |
+| `readvise_upsert_rental_debt` | `readvise_list_rental_debt` |
 
 Only tell the user "saved" / "logged" / "moved" after verify succeeds.
 

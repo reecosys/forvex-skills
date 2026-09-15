@@ -6,6 +6,14 @@ Production MCP: `https://control.forvex.app/api/mcp`
 
 Standard recontrol envelope: success → `structuredContent`; errors → `isError: true`.
 
+Write tool is **`forvex_emit_event` only.** Reads below are allowlisted. Do not call
+`forvex_underwrite` or `forvex_save_deal` from this lane.
+
+## forvex_list_deals
+
+**Read.** Pipeline to market. Filter `status` to `LISTED`, `REHAB`, or `INVENTORY` unless the
+operator asks for another slice. Paginated (default 25).
+
 ## forvex_get_property
 
 **Read.** Resolve an address to a canonical `property_id` before emitting a property event.
@@ -17,6 +25,32 @@ Standard recontrol envelope: success → `structuredContent`; errors → `isErro
 | `workspace_id` | uuid | no |
 
 **Output:** `{ property_id, address, ... }`
+
+## forvex_get_deal
+
+**Read.** Saved analysis snapshot for listing-tied work. Required before
+`forvex_render_presentation` modes that need a saved deal.
+
+## forvex_get_market_brief
+
+**Read.** Market-wide Sense brief (metro pricing/liquidity, ZIP movers, tract scores).
+**Data only** — write the Local Market Intel narrative in CMO voice. Caveat `data_month` vs
+`scored_month` (scores lag).
+
+## forvex_get_market_intelligence
+
+**Read.** Property-tied tract/momentum. Use for a named house, not the weekly brand audit.
+
+## forvex_render_presentation
+
+**Read.** Operator HTML for a **saved** analysis (`dashboard` / `deck` / `pdf`). Does not
+re-run math. If there is no saved analysis, refuse and hand off — do not invent numbers.
+
+## readvise_list_competitor_work
+
+**Read.** Call **first** on a competitor sweep. Returns work queues (ripened listings without
+outcome, stale operator sizing, quiet feeds). Read `collector_status` before treating feeds
+as dead.
 
 ## forvex_emit_event
 

@@ -4,7 +4,7 @@
 
 When the **forVEX Control MCP** is connected, pull data from it before asking the user. Server: `https://control.forvex.app/api/mcp` (OAuth — configure once in Claude → Connectors).
 
-> **Status (MCP 0.3.0 / `TOOL_SCHEMA_VERSION` 0.8.0):** Phase 1 read tools, Phase 4 write tools, and the learning-layer capture tools are **live**. `forvex_emit_event` (0.8.0, additive) accepts `entity_type: workspace` plus lanes `ops`/`net`. `forvex_render_presentation` (0.7.0, additive) renders operator HTML for six modes. Disconnect/reconnect the forVEX Control connector if tool names look stale. Every tool declares `outputSchema`; `forvex_get_comps` / `forvex_get_comp_detail` may include optional top-level `subject` and `search_params`. `forvex_get_property` may include optional `parcel` (decoded last-sale flags, physicals, winning debt). Market flip/rent scores may return `null` while tract resolution works — use MoM/YoY when scores are missing and default `market_risk` to 0.5. Auth failures read: *"Missing or invalid auth context. Re-authorize via /api/oauth/authorize (or refresh your Supabase session) and retry."*
+> **Status (MCP 0.3.0 / `TOOL_SCHEMA_VERSION` 0.9.0):** Phase 1 read tools, Phase 4 write tools, and the learning-layer capture tools are **live**. `readvise_list_rental_debt` / `readvise_upsert_rental_debt` (0.9.0, additive) are the Holdings rental capital map. `forvex_emit_event` (0.8.0, additive) accepts `entity_type: workspace` plus lanes `ops`/`net`. `forvex_render_presentation` (0.7.0, additive) renders operator HTML for six modes. Disconnect/reconnect the forVEX Control connector if tool names look stale. Every tool declares `outputSchema`; `forvex_get_comps` / `forvex_get_comp_detail` may include optional top-level `subject` and `search_params`. `forvex_get_property` may include optional `parcel` (decoded last-sale flags, physicals, winning debt). Market flip/rent scores may return `null` while tract resolution works — use MoM/YoY when scores are missing and default `market_risk` to 0.5. Auth failures read: *"Missing or invalid auth context. Re-authorize via /api/oauth/authorize (or refresh your Supabase session) and retry."*
 
 ---
 
@@ -44,6 +44,8 @@ When MCP is connected, server state is authoritative. `my-buy-box.md` is only an
 | `forvex_build_wholesale_sheet` | 0.6+ | Buyer-facing wholesale one-pager (`{ data, html }`). Suppresses operator economics. |
 | `forvex_render_presentation` | **0.7.0 (new)** | Operator HTML for six modes: dashboard, deck, pdf, internal_sheet, appointment_debrief, rehab_scope. Returns `{ schema_version, mode, data, html }`. HTTP twin: `POST /api/operate/presentation`. |
 | `forvex_emit_event` | **0.8.0** | Cross-lane ledger write. `entity_type`: `property` \| `deal` \| `workspace`. Lanes: `cmo` \| `cfo` \| `pm` \| `mkt` \| `ops` \| `net`. |
+| `readvise_list_rental_debt` | **0.9.0** | Holdings rental capital map (facilities + pledged properties + latest payoff). |
+| `readvise_upsert_rental_debt` | **0.9.0** | Write that map: upsert account, replace collateral set, append payoff snapshot. |
 
 ---
 
