@@ -276,9 +276,23 @@
     "pm-lane": {
       "lane": "cowork",
       "tier": "mcp",
-      "writes": ["forvex_emit_event"],
-      "reads": ["forvex_get_property"],
-      "handoffs": ["forvex-activity-log", "cfo-lane"],
+      "writes": [
+        "forvex_emit_event",
+        "readvise_upsert_property_capex",
+        "readvise_upsert_rental_ops"
+      ],
+      "reads": [
+        "forvex_list_deals",
+        "forvex_get_deal",
+        "forvex_get_deal_history",
+        "forvex_get_estimate",
+        "forvex_get_property",
+        "readvise_list_rental_debt",
+        "readvise_list_rental_ops",
+        "readvise_list_property_capex",
+        "readvise_resolve_property"
+      ],
+      "handoffs": ["forvex-activity-log", "cfo-lane", "forvex-underwriting"],
       "platform_refs": ["resolve-context", "write-discipline", "skill-routing"]
     },
     "cfo-lane": {

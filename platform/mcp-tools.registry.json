@@ -1,5 +1,5 @@
 {
-  "mcp_schema_version": "0.9.0",
+  "mcp_schema_version": "0.10.0",
   "source": "recontrol/lib/mcp/tools/registry.ts",
   "tools": [
     "forvex_whoami",
@@ -49,6 +49,10 @@
     "readvise_list_competitor_work",
     "readvise_list_rental_debt",
     "readvise_upsert_rental_debt",
+    "readvise_list_property_capex",
+    "readvise_upsert_property_capex",
+    "readvise_list_rental_ops",
+    "readvise_upsert_rental_ops",
     "forvex_emit_event"
   ]
 }
